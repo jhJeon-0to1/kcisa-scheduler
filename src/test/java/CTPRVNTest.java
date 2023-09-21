@@ -3,7 +3,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
-import scheduler.test.model.SchedulerStatus;
+import scheduler.kcisa.model.SchedulerStatus;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
