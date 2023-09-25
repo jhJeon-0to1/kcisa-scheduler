@@ -25,7 +25,7 @@ import java.util.Optional;
 
 @Component
 public class CTPRVNJob extends QuartzJobBean {
-    private final String tableName = "popltn_info";
+    private final String tableName = "CTPRVN_ACCTO_POPLTN_INFO";
     private final DataSource dataSource;
     private final SchedulerLogService schedulerLogService;
     WebClient webClient = WebClient.builder().baseUrl("https://jumin.mois.go.kr/statMonth.do").build();
@@ -38,30 +38,52 @@ public class CTPRVNJob extends QuartzJobBean {
     }
 
     private static String getCode(String name) {
-        return switch (name) {
-            case "서울특별시" -> "11";
-            case "인천광역시" -> "28";
-            case "경기도" -> "41";
-            case "강원도", "강원특별자치도" -> "51";
-            case "충청북도" -> "43";
-            case "충청남도" -> "44";
-            case "대전광역시" -> "30";
-            case "세종특별자치시" -> "36";
-            case "전라북도" -> "45";
-            case "전라남도" -> "46";
-            case "광주광역시" -> "29";
-            case "경상북도" -> "47";
-            case "경상남도" -> "48";
-            case "대구광역시" -> "27";
-            case "울산광역시" -> "31";
-            case "부산광역시" -> "26";
-            case "제주특별자치도" -> "50";
-            default -> null;
-        };
+        switch (name) {
+            case "서울특별시":
+                return "11";
+            case "인천광역시":
+                return "28";
+            case "경기도":
+                return "41";
+            case "강원도":
+            case "강원특별자치도":
+                return "51";
+            case "충청북도":
+                return "43";
+            case "충청남도":
+                return "44";
+            case "대전광역시":
+                return "30";
+            case "세종특별자치시":
+                return "36";
+            case "전라북도":
+                return "45";
+            case "전라남도":
+                return "46";
+            case "광주광역시":
+                return "29";
+            case "경상북도":
+                return "47";
+            case "경상남도":
+                return "48";
+            case "대구광역시":
+                return "27";
+            case "울산광역시":
+                return "31";
+            case "부산광역시":
+                return "26";
+            case "제주특별자치도":
+                return "50";
+            case "전국":
+                return "00";
+            default:
+                return null;
+        }
     }
 
     @Override
-    protected void executeInternal(@NotNull org.quartz.JobExecutionContext jobExecutionContext) throws org.quartz.JobExecutionException {
+    protected void executeInternal(@NotNull org.quartz.JobExecutionContext jobExecutionContext)
+            throws org.quartz.JobExecutionException {
         String groupName = jobExecutionContext.getJobDetail().getKey().getGroup();
         String jobName = jobExecutionContext.getJobDetail().getKey().getName();
 
@@ -74,17 +96,20 @@ public class CTPRVNJob extends QuartzJobBean {
 
             Connection connection = dataSource.getConnection();
 
-            String insertQuery = "INSERT INTO kcisa.popltn_info (base_year, base_month, CTPRVN_CD, ctprvn_nm, popltn_co) VALUES (?, ?, ?, (SELECT CTPRVN_INFO.CTPRVN_NM FROM kcisa.CTPRVN_INFO WHERE CTPRVN_INFO.CTPRVN_CD = ?), ?) ON DUPLICATE KEY UPDATE popltn_co = VALUES(popltn_co), updt_dt = NOW()";
+            String insertQuery = "INSERT INTO analysis_etl.CTPRVN_ACCTO_POPLTN_INFO (BASE_YM, BASE_YEAR, BASE_MT, CTPRVN_CD, CTPRVN_NM, POPLTN_CO, COLCT_DE) VALUES (?, ?, ?, ?, (SELECT C.CTPRVN_NM FROM CTPRVN_INFO AS C WHERE C.CTPRVN_CD = ?), ?, DATE_FORMAT(NOW(), '%Y%m%d')) ON DUPLICATE KEY UPDATE popltn_co = VALUES(popltn_co), UPDT_DE = DATE_FORMAT(NOW(), '%Y%m%d')";
 
             PreparedStatement pstmt = connection.prepareStatement(insertQuery);
 
             for (LocalDate date = startDate; date.isBefore(endDate.plusMonths(1)); date = date.plusMonths(1)) {
-                BigDecimal total = BigDecimal.valueOf(0);
                 String year = date.format(DateTimeFormatter.ofPattern("yyyy"));
                 String month = date.format(DateTimeFormatter.ofPattern("MM"));
 
-                String formData = "searchYearMonth=month&searchYearStart=" + year + "&searchMonthStart=" + month + "&searchYearEnd=" + year + "&searchMonthEnd=" + month + "&sltOrgType=1&sltOrgLvl1=A&sltOrgLvl2=A&generation=generation";
-                String htmlResponse = webClient.post().uri(url).body(BodyInserters.fromValue(formData)).header("Content-Type", "application/x-www-form-urlencoded").retrieve().bodyToMono(String.class).block();
+                String formData = "searchYearMonth=month&searchYearStart=" + year + "&searchMonthStart=" + month
+                        + "&searchYearEnd=" + year + "&searchMonthEnd=" + month
+                        + "&sltOrgType=1&sltOrgLvl1=A&sltOrgLvl2=A&generation=generation";
+                String htmlResponse = webClient.post().uri(url).body(BodyInserters.fromValue(formData))
+                        .header("Content-Type", "application/x-www-form-urlencoded").retrieve().bodyToMono(String.class)
+                        .block();
 
                 if (htmlResponse == null) {
                     System.out.println(year + month + "htmlResponse is null");
@@ -109,25 +134,16 @@ public class CTPRVNJob extends QuartzJobBean {
                     }
                     String population = cells.get(2).text().replace(",", "");
 
-                    pstmt.setString(1, year);
-                    pstmt.setString(2, month);
-                    pstmt.setString(3, code);
+                    pstmt.setString(1, year + month);
+                    pstmt.setString(2, year);
+                    pstmt.setString(3, month);
                     pstmt.setString(4, code);
-                    pstmt.setBigDecimal(5, new BigDecimal(population));
-                    total = total.add(new BigDecimal(population));
+                    pstmt.setString(5, code);
+                    pstmt.setBigDecimal(6, new BigDecimal(population));
 
                     pstmt.addBatch();
                     count++;
                 }
-
-                pstmt.setString(1, year);
-                pstmt.setString(2, month);
-                pstmt.setString(3, "00");
-                pstmt.setString(4, "00");
-                pstmt.setBigDecimal(5, total);
-
-                pstmt.addBatch();
-                count++;
             }
 
             pstmt.executeBatch();
@@ -137,12 +153,15 @@ public class CTPRVNJob extends QuartzJobBean {
             if (!updt_cnt.isPresent()) {
                 throw new Exception("updt_cnt is empty");
             }
-            schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count, count - updt_cnt.get(), updt_cnt.get()));
+            schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count,
+                    count - updt_cnt.get(), updt_cnt.get()));
 
-            System.out.println("시도 인구 추가 완료");
+            System.out.println(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + " 시도 인구 추가 완료");
         } catch (Exception e) {
-            schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, e.getMessage()));
-            System.out.println("시도 인구 추가 실패");
+            schedulerLogService
+                    .create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, e.getMessage()));
+
+            System.out.println(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + " 시도 인구 추가 실패");
             e.printStackTrace();
         }
     }

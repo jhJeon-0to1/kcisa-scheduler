@@ -23,15 +23,16 @@ public class Utils {
 
     public static Optional<Integer> getUpdtCount(String tableName) throws Exception {
         Set<String> allowedTables = new HashSet<>(
-                Arrays.asList("mobile_이용량", "sports_시도별관중", "popltn_info", "sports_일별경기", "pblprfr_viewing_info", "kopis_공연시설", "kopis_공연시설상세", "kobis_지역별일별", "kobis_일별매출액", "kobis_movie", "kopis_공연시설통합")
-        );
+                Arrays.asList("COLCT_SPORTS_MATCH_INFO", "COLCT_SPORTS_VIEWNG_INFO", "COLCT_MOBILE_CTGRY_USE_QY_INFO",
+                        "CTPRVN_ACCTO_POPLTN_INFO", "COLCT_PBLPRFR_FCLTY_INFO", "COLCT_PBLPRFR_FCLTY_DETAIL_INFO"));
 
         if (!allowedTables.contains(tableName)) {
             throw new Exception("tableName is not allowed");
         }
 
         try {
-            String query = "SELECT COUNT(*) FROM kcisa." + tableName + " WHERE DATE_FORMAT(updt_dt, '%Y%m%d') = DATE_FORMAT(NOW(), '%Y%m%d')";
+            String query = "SELECT COUNT(*) FROM analysis_etl." + tableName
+                    + " WHERE DATE_FORMAT(UPDT_DE, '%Y%m%d') = DATE_FORMAT(NOW(), '%Y%m%d')";
             PreparedStatement preparedStatement = connection.prepareStatement(query);
 
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -43,6 +44,29 @@ public class Utils {
         } catch (Exception e) {
             e.printStackTrace();
             throw new Exception("getUpdtCount error");
+        }
+    }
+
+    public static Boolean checkAlreadyExist(String tableName, String date) throws Exception {
+        try {
+            Boolean isMonth = date.length() == 6;
+            String dateQuery = isMonth ? "BASE_YM" : "BASE_DT";
+
+            String query = "SELECT COUNT(*) AS count FROM analysis_etl." + tableName + " WHERE " + dateQuery + "= ?";
+            PreparedStatement countPstmt = connection.prepareStatement(query);
+            countPstmt.setString(1, date);
+
+            ResultSet countRs = countPstmt.executeQuery();
+            int count = 0;
+            if (countRs.next()) {
+                count = countRs.getInt("count");
+            }
+            countPstmt.close();
+
+            return count > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception("분석된 데이터를 확인하는 중 오류가 발생했습니다.");
         }
     }
 }

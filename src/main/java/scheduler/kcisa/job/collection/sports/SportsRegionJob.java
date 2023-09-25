@@ -10,10 +10,10 @@ import org.springframework.http.MediaType;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 import scheduler.kcisa.model.SchedulerStatus;
 import scheduler.kcisa.model.collection.SchedulerLog;
 import scheduler.kcisa.service.SchedulerLogService;
+import scheduler.kcisa.utils.CustomException;
 import scheduler.kcisa.utils.Utils;
 
 import javax.sql.DataSource;
@@ -33,7 +33,7 @@ public class SportsRegionJob extends QuartzJobBean {
     SchedulerLogService schedulerLogService;
     String url = "http://data.prosports.or.kr/spectator/m0204/ajax/searchall";
     List<Code> codeList = new ArrayList<>();
-    String tableName = "sports_시도별관중";
+    String tableName = "COLCT_SPORTS_VIEWNG_INFO";
     WebClient webClient = WebClient.builder().baseUrl("http://data.prosports.or.kr").build();
     Connection connection;
 
@@ -62,7 +62,7 @@ public class SportsRegionJob extends QuartzJobBean {
     }
 
     @Override
-    protected void executeInternal(@NotNull org.quartz.JobExecutionContext context) {
+    protected void executeInternal(org.quartz.JobExecutionContext context) {
         int count = 0;
         String groupName = context.getJobDetail().getKey().getGroup();
         String jobName = context.getJobDetail().getKey().getName();
@@ -76,12 +76,13 @@ public class SportsRegionJob extends QuartzJobBean {
             String month = stdDate.format(DateTimeFormatter.ofPattern("MM"));
             String day = stdDate.format(DateTimeFormatter.ofPattern("dd"));
 
-            String inputQuery = "INSERT kcisa.sports_시도별관중 (date, year, month, day, local_code, local_name, region, kleauge_people, kbo_people, kbl_people, wkbl_people, kovo_people, all_people, kleauge_game, kbo_game, kbl_game, wkbl_game, kovo_game, all_game) VALUES (?, ?, ?, ?, ?, (SELECT CTPRVN_NM FROM kcisa.ctprvn_info WHERE CTPRVN_CD = ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE kleauge_people = values(kleauge_people), kbo_people = values(kbo_people), kbl_people = values(kbl_people), wkbl_people = values(wkbl_people), kovo_people = values(kovo_people), all_people = values(all_people), kleauge_game = values(kleauge_game), kbo_game = values(kbo_game), kbl_game = values(kbl_game), wkbl_game = values(wkbl_game), kovo_game = values(kovo_game), all_game = values(all_game), updt_dt = now()";
+            String inputQuery = "INSERT analysis_etl.COLCT_SPORTS_VIEWNG_INFO (BASE_DE, BASE_YEAR, BASE_MT, BASE_DAY, CTPRVN_CD, CTPRVN_NM, KLEA_VIEWING_NMPR_CO, KBO_VIEWING_NMPR_CO, KBL_VIEWING_NMPR_CO, WKBL_VIEWING_NMPR_CO, KOVO_VIEWING_NMPR_CO, SPORTS_VIEWING_NMPR_CO, KLEA_MATCH_CO, KBO_MATCH_CO, KBL_MATCH_CO, WKBL_MATCH_CO, KOVO_MATCH_CO, SPORTS_MATCH_CO, COLCT_DE) VALUE (?, ?, ?, ?, ?, (SELECT CTPRVN_NM FROM CTPRVN_INFO AS C WHERE C.CTPRVN_CD = ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DATE_FORMAT(NOW(), '%Y%m%d')) ON DUPLICATE KEY UPDATE BASE_DE = VALUES(BASE_DE) , BASE_YEAR = VALUES(BASE_YEAR) , BASE_MT = VALUES(BASE_MT) , BASE_DAY = VALUES(BASE_DAY) , CTPRVN_CD = VALUES(CTPRVN_CD) , KLEA_VIEWING_NMPR_CO = VALUES(KLEA_VIEWING_NMPR_CO) , KBO_VIEWING_NMPR_CO = VALUES(KBO_VIEWING_NMPR_CO) , KBL_VIEWING_NMPR_CO = VALUES(KBL_VIEWING_NMPR_CO) , WKBL_VIEWING_NMPR_CO = VALUES(WKBL_VIEWING_NMPR_CO) , KOVO_VIEWING_NMPR_CO = VALUES(KOVO_VIEWING_NMPR_CO) , SPORTS_VIEWING_NMPR_CO = VALUES(SPORTS_VIEWING_NMPR_CO) , KLEA_MATCH_CO = VALUES(KLEA_MATCH_CO) , KBO_MATCH_CO = VALUES(KBO_MATCH_CO) , KBL_MATCH_CO = VALUES(KBL_MATCH_CO) , WKBL_MATCH_CO = VALUES(WKBL_MATCH_CO) , KOVO_MATCH_CO = VALUES(KOVO_MATCH_CO) , SPORTS_MATCH_CO = VALUES(SPORTS_MATCH_CO), UPDT_DE = DATE_FORMAT(NOW(), '%Y%m%d')";
+
             PreparedStatement pstmt = connection.prepareStatement(inputQuery);
 
             for (Code code : codeList) {
                 String regionCode = code.region;
-                String regionName = code.name;
+
                 String codeId = code.code;
 
                 JsonNodeFactory nodeFactory = new JsonNodeFactory(false);
@@ -100,13 +101,12 @@ public class SportsRegionJob extends QuartzJobBean {
                 bodyData.set("pageSize", new TextNode("30"));
                 bodyData.set("startRow", new TextNode("-30"));
 
+                JsonNode response = webClient.post().uri(url).contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(bodyData).retrieve().bodyToMono(JsonNode.class).block();
 
-                Mono<JsonNode> response = webClient.post().uri(url).contentType(MediaType.APPLICATION_JSON).bodyValue(bodyData).retrieve().bodyToMono(JsonNode.class);
-
-                JsonNode jsonResponse = response.block();
-
-                if (jsonResponse == null) {
-                    schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, "해당일자 데이터가 없습니다."));
+                if (response == null) {
+                    schedulerLogService.create(
+                            new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, "해당일자 데이터가 없습니다."));
                     return;
                 }
 
@@ -114,21 +114,20 @@ public class SportsRegionJob extends QuartzJobBean {
                 pstmt.setString(2, year);
                 pstmt.setString(3, month);
                 pstmt.setString(4, day);
-                pstmt.setString(5, codeId);
+                pstmt.setString(5, regionCode);
                 pstmt.setString(6, regionCode);
-                pstmt.setString(7, regionCode);
-                pstmt.setBigDecimal(8, new BigDecimal(jsonResponse.get("total1").asText()));
-                pstmt.setBigDecimal(9, new BigDecimal(jsonResponse.get("total2").asText()));
-                pstmt.setBigDecimal(10, new BigDecimal(jsonResponse.get("total3").asText()));
-                pstmt.setBigDecimal(11, new BigDecimal(jsonResponse.get("total4").asText()));
-                pstmt.setBigDecimal(12, new BigDecimal(jsonResponse.get("total5").asText()));
-                pstmt.setBigDecimal(13, new BigDecimal(jsonResponse.get("total6").asText()));
-                pstmt.setBigDecimal(14, new BigDecimal(jsonResponse.get("gamecnt1").asText()));
-                pstmt.setBigDecimal(15, new BigDecimal(jsonResponse.get("gamecnt2").asText()));
-                pstmt.setBigDecimal(16, new BigDecimal(jsonResponse.get("gamecnt3").asText()));
-                pstmt.setBigDecimal(17, new BigDecimal(jsonResponse.get("gamecnt4").asText()));
-                pstmt.setBigDecimal(18, new BigDecimal(jsonResponse.get("gamecnt5").asText()));
-                pstmt.setBigDecimal(19, new BigDecimal(jsonResponse.get("gamecnt6").asText()));
+                pstmt.setBigDecimal(7, new BigDecimal(response.get("total1").asText()));
+                pstmt.setBigDecimal(8, new BigDecimal(response.get("total2").asText()));
+                pstmt.setBigDecimal(9, new BigDecimal(response.get("total3").asText()));
+                pstmt.setBigDecimal(10, new BigDecimal(response.get("total4").asText()));
+                pstmt.setBigDecimal(11, new BigDecimal(response.get("total5").asText()));
+                pstmt.setBigDecimal(12, new BigDecimal(response.get("total6").asText()));
+                pstmt.setBigDecimal(13, new BigDecimal(response.get("gamecnt1").asText()));
+                pstmt.setBigDecimal(14, new BigDecimal(response.get("gamecnt2").asText()));
+                pstmt.setBigDecimal(15, new BigDecimal(response.get("gamecnt3").asText()));
+                pstmt.setBigDecimal(16, new BigDecimal(response.get("gamecnt4").asText()));
+                pstmt.setBigDecimal(17, new BigDecimal(response.get("gamecnt5").asText()));
+                pstmt.setBigDecimal(18, new BigDecimal(response.get("gamecnt6").asText()));
 
                 count++;
                 pstmt.addBatch();
@@ -140,14 +139,16 @@ public class SportsRegionJob extends QuartzJobBean {
 
             Optional<Integer> updt_count = Utils.getUpdtCount(tableName);
             if (!updt_count.isPresent()) {
-                throw new Exception("getUpdtCount error");
+                throw new CustomException("002", "updt_count error");
             }
-            schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count, count - updt_count.get(), updt_count.get()));
+            schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count,
+                    count - updt_count.get(), updt_count.get()));
 
         } catch (Exception e) {
             System.out.println("스포츠 지역별 관중 수집 실패");
             e.printStackTrace();
-            schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, e.getMessage()));
+            schedulerLogService
+                    .create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, e.getMessage()));
         }
     }
 

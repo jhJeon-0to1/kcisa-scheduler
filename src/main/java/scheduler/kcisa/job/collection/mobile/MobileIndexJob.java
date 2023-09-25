@@ -27,7 +27,7 @@ import java.util.Optional;
 public class MobileIndexJob extends QuartzJobBean {
     SchedulerLogService schedulerLogService;
     DataSource dataSource;
-    String tableName = "mobile_이용량";
+    String tableName = "COLCT_MOBILE_CTGRY_USE_QY_INFO";
     String url = "https://api.dmp.igaworks.com/v1/insight/category-usage";
     WebClient webClient = WebClient.builder().baseUrl(url).build();
     Connection connection;
@@ -48,17 +48,19 @@ public class MobileIndexJob extends QuartzJobBean {
         String groupName = context.getJobDetail().getKey().getGroup();
         String jobName = context.getJobDetail().getKey().getName();
 
-        LocalDate yesterday = LocalDate.now().minusDays(1);
+        LocalDate yesterday = LocalDate.now().minusDays(2);
         String date = yesterday.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
         try {
-            System.out.println("MobileIndexJob Start");
             schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.STARTED));
 
-            String insertQuery = "INSERT INTO kcisa.mobile_이용량 (date, categoryMain, categorySub, userTotal, userAos, userIos, timeTotal, timeAos, timeIos) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE userTotal = VALUES(userTotal), userAos = VALUES(userAos), userIos = VALUES(userIos), timeTotal = VALUES(timeTotal), timeAos = VALUES(timeAos), timeIos = VALUES(timeIos), updt_dt = CURRENT_TIMESTAMP";
+            String insertQuery = "INSERT INTO analysis_etl.COLCT_MOBILE_CTGRY_USE_QY_INFO (COLCT_ID,BASE_DE,BASE_YEAR,BASE_MT,BASE_DAY,UPPER_CTGRY_NM,LWPRT_CTGRY_NM,ALL_EMPR_CO,AOS_EMPR_CO,IOS_EMPR_CO,ALL_USE_TIME,AOS_USE_TIME,IOS_USE_TIME,COLCT_DE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DATE_FORMAT(NOW(), '%Y%m%d')) ON DUPLICATE KEY UPDATE ALL_EMPR_CO = VALUES(ALL_EMPR_CO), AOS_EMPR_CO = VALUES(AOS_EMPR_CO), IOS_EMPR_CO = VALUES(IOS_EMPR_CO), ALL_USE_TIME = VALUES(ALL_USE_TIME), AOS_USE_TIME = VALUES(AOS_USE_TIME), IOS_USE_TIME = VALUES(IOS_USE_TIME), UPDT_DE = DATE_FORMAT(NOW(), '%Y%m%d')";
+
             PreparedStatement preparedStatement = connection.prepareStatement(insertQuery);
 
-            JsonNode response = webClient.get().uri(uriBuilder -> uriBuilder.queryParam("startDate", date).queryParam("endDate", date).build()).header("Authorization", "Bearer " + apiKey).retrieve().bodyToMono(JsonNode.class).block();
+            JsonNode response = webClient.get()
+                    .uri(uriBuilder -> uriBuilder.queryParam("startDate", date).queryParam("endDate", date).build())
+                    .header("Authorization", "Bearer " + apiKey).retrieve().bodyToMono(JsonNode.class).block();
 
             if (response == null) {
                 throw new Exception("jsonResponse is null");
@@ -72,22 +74,26 @@ public class MobileIndexJob extends QuartzJobBean {
                 }
                 String categoryMain = data.get("categoryMain").asText();
                 String categorySub = data.get("categorySub").asText();
-                double userTotal = data.get("userTotal").asDouble();
-                double userAos = data.get("userAos").asDouble();
-                double userIos = data.get("userIos").asDouble();
-                double timeTotal = data.get("timeTotal").asDouble();
-                double timeAos = data.get("timeAos").asDouble();
-                double timeIos = data.get("timeIos").asDouble();
+                BigDecimal userTotal = data.get("userTotal").decimalValue();
+                BigDecimal userAos = data.get("userAos").decimalValue();
+                BigDecimal userIos = data.get("userIos").decimalValue();
+                BigDecimal timeTotal = data.get("timeTotal").decimalValue();
+                BigDecimal timeAos = data.get("timeAos").decimalValue();
+                BigDecimal timeIos = data.get("timeIos").decimalValue();
 
-                preparedStatement.setString(1, dateStr);
-                preparedStatement.setString(2, categoryMain);
-                preparedStatement.setString(3, categorySub);
-                preparedStatement.setBigDecimal(4, new BigDecimal(userTotal));
-                preparedStatement.setBigDecimal(5, new BigDecimal(userAos));
-                preparedStatement.setBigDecimal(6, new BigDecimal(userIos));
-                preparedStatement.setBigDecimal(7, new BigDecimal(timeTotal));
-                preparedStatement.setBigDecimal(8, new BigDecimal(timeAos));
-                preparedStatement.setBigDecimal(9, new BigDecimal(timeIos));
+                preparedStatement.setString(1, dateStr + categoryMain + categorySub);
+                preparedStatement.setString(2, dateStr);
+                preparedStatement.setString(3, dateStr.substring(0, 4));
+                preparedStatement.setString(4, dateStr.substring(4, 6));
+                preparedStatement.setString(5, dateStr.substring(6, 8));
+                preparedStatement.setString(6, categoryMain);
+                preparedStatement.setString(7, categorySub);
+                preparedStatement.setBigDecimal(8, userTotal);
+                preparedStatement.setBigDecimal(9, userAos);
+                preparedStatement.setBigDecimal(10, userIos);
+                preparedStatement.setBigDecimal(11, timeTotal);
+                preparedStatement.setBigDecimal(12, timeAos);
+                preparedStatement.setBigDecimal(13, timeIos);
 
                 preparedStatement.addBatch();
                 count++;
@@ -99,11 +105,13 @@ public class MobileIndexJob extends QuartzJobBean {
             if (!updt_count.isPresent()) {
                 throw new Exception("updt_count is empty");
             }
-            schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count, count - updt_count.get(), updt_count.get()));
+            schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count,
+                    count - updt_count.get(), updt_count.get()));
 
         } catch (Exception e) {
             e.printStackTrace();
-            schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, e.getMessage()));
+            schedulerLogService
+                    .create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, e.getMessage()));
             throw new JobExecutionException(e);
         }
     }

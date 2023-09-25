@@ -13,6 +13,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import scheduler.kcisa.model.SchedulerStatus;
 import scheduler.kcisa.model.collection.SchedulerLog;
 import scheduler.kcisa.service.SchedulerLogService;
+import scheduler.kcisa.utils.CustomException;
 import scheduler.kcisa.utils.Utils;
 
 import javax.sql.DataSource;
@@ -28,7 +29,7 @@ public class SportsDailyJob extends QuartzJobBean {
     DataSource dataSource;
     SchedulerLogService schedulerLogService;
     String url = "http://data.prosports.or.kr/spectator/m0201/ajax/search";
-    String tableName = "sports_일별경기";
+    String tableName = "COLCT_SPORTS_MATCH_INFO";
     WebClient webClient = WebClient.builder().baseUrl("http://data.prosports.or.kr").build();
     Connection connection;
 
@@ -53,7 +54,7 @@ public class SportsDailyJob extends QuartzJobBean {
             LocalDate yesterday = LocalDate.now().minusDays(2);
             String date = yesterday.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
-            String inputQuery = "INSERT kcisa.sports_일별경기 (game_seq, date, year, month, day, agency_name, stadium_nm, home_name, away_name, league_nm, spec_num) VALUE (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE date = VALUES(date) , year = VALUES(year) , month = VALUES(month) , day = VALUES(day) , agency_name = VALUES(agency_name) , stadium_nm = VALUES(stadium_nm) , home_name = VALUES(home_name) , away_name = VALUES(away_name) , league_nm = VALUES(league_nm) , spec_num = VALUES(spec_num), updt_dt=NOW()";
+            String inputQuery = "INSERT analysis_etl.COLCT_SPORTS_MATCH_INFO (MATCH_SEQ_NO, MATCH_DE, BASE_YEAR, BASE_MT, BASE_DAY, GRP_NM, LEA_NM, HOME_TEAM_NM, AWAY_TEAM_NM, STDM_NM, SPORTS_VIEWING_NMPR_CO, COLCT_DE) VALUE (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DATE_FORMAT(NOW(), '%Y%m%d')) ON DUPLICATE KEY UPDATE MATCH_SEQ_NO = VALUES(MATCH_SEQ_NO), MATCH_DE = VALUES(MATCH_DE), BASE_YEAR = VALUES(BASE_YEAR), BASE_MT = VALUES(BASE_MT), BASE_DAY = VALUES(BASE_DAY), GRP_NM = VALUES(GRP_NM), LEA_NM = VALUES(LEA_NM), HOME_TEAM_NM = VALUES(HOME_TEAM_NM), AWAY_TEAM_NM = VALUES(AWAY_TEAM_NM), STDM_NM = VALUES(STDM_NM), SPORTS_VIEWING_NMPR_CO = VALUES(SPORTS_VIEWING_NMPR_CO), UPDT_DE = DATE_FORMAT(NOW(), '%Y%m%d')";
             PreparedStatement pstmt = connection.prepareStatement(inputQuery);
 
             int startRow = 0;
@@ -70,7 +71,8 @@ public class SportsDailyJob extends QuartzJobBean {
                 bodyData.set("pageSize", new TextNode("100"));
                 bodyData.set("startRowNo", new TextNode(String.valueOf(startRow)));
 
-                ArrayNode response = webClient.post().uri(url).contentType(MediaType.APPLICATION_JSON).bodyValue(bodyData).retrieve().bodyToMono(ArrayNode.class).block();
+                ArrayNode response = webClient.post().uri(url).contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(bodyData).retrieve().bodyToMono(ArrayNode.class).block();
 
                 if (Objects.requireNonNull(response).isEmpty()) {
                     break;
@@ -78,15 +80,16 @@ public class SportsDailyJob extends QuartzJobBean {
                 startRow += 100;
                 for (JsonNode row : response) {
                     pstmt.setString(1, row.get("game_seq").asText().trim());
-                    pstmt.setString(2, row.get("year").asText().trim() + row.get("month").asText().trim() + row.get("day").asText().trim());
+                    pstmt.setString(2, row.get("year").asText().trim() + row.get("month").asText().trim()
+                            + row.get("day").asText().trim());
                     pstmt.setString(3, row.get("year").asText().trim());
                     pstmt.setString(4, row.get("month").asText().trim());
                     pstmt.setString(5, row.get("day").asText().trim());
                     pstmt.setString(6, row.get("agency_name").asText().trim());
-                    pstmt.setString(7, row.get("stadium_nm").asText().trim());
+                    pstmt.setString(7, row.get("league_nm").asText().trim());
                     pstmt.setString(8, row.get("h_club_name").asText().trim());
                     pstmt.setString(9, row.get("a_club_name").asText().trim());
-                    pstmt.setString(10, row.get("league_nm").asText().trim());
+                    pstmt.setString(10, row.get("stadium_nm").asText().trim());
                     pstmt.setBigDecimal(11, row.get("spec_num").decimalValue());
 
                     pstmt.addBatch();
@@ -99,15 +102,17 @@ public class SportsDailyJob extends QuartzJobBean {
 
             Optional<Integer> updt_count = Utils.getUpdtCount(tableName);
             if (!updt_count.isPresent()) {
-                throw new Exception("getUpdtCount error");
+                throw new CustomException("002", "getUpdtCount error");
             }
 
             System.out.println("스포츠 일별 경기 수집 완료");
-            schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count, count - updt_count.get(), updt_count.get()));
+            schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count,
+                    count - updt_count.get(), updt_count.get()));
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("스포츠 일별 경기 수집 실패");
-            schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, e.getMessage()));
+            schedulerLogService
+                    .create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, e.getMessage()));
         }
     }
 }

@@ -58,6 +58,12 @@
     </repositories>
 
     <dependencies>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -213,8 +219,8 @@
                 <artifactId>maven-compiler-plugin
                 </artifactId>
                 <configuration>
-                    <source>15</source>
-                    <target>15</target>
+                    <source>8</source>
+                    <target>8</target>
                 </configuration>
             </plugin>
         </plugins>

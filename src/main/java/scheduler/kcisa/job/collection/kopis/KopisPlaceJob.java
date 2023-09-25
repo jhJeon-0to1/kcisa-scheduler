@@ -29,7 +29,7 @@ public class KopisPlaceJob extends QuartzJobBean {
     @Value("${kopis.api.key}")
     String key;
     WebClient webClient = WebClient.builder().baseUrl("http://kopis.or.kr").build();
-    String tableName = "kopis_공연시설";
+    String tableName = "COLCT_PBLPRFR_FCLTY_INFO";
     Connection connection;
     Map<String, String> regionMap = new HashMap<>();
 
@@ -64,15 +64,13 @@ public class KopisPlaceJob extends QuartzJobBean {
         String jobName = context.getJobDetail().getKey().getName();
         int count = 0;
         int cPage = 1;
-        String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
 
         XmlMapper xmlMapper = new XmlMapper();
         try {
             connection = dataSource.getConnection();
             schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.STARTED));
 
-//            String insertQuery = "INSERT INTO kcisa.kopis_공연시설 (REGIST_DE, fcltynm, mt10id, mt13cnt, fcltychartr, CTPRVN_CD, CTPRVN_NM, gugunnm, opende) VALUE  (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE fcltynm = VALUES(fcltynm), mt13cnt = VALUES(mt13cnt), fcltychartr = VALUES(fcltychartr), CTPRVN_NM = VALUES(CTPRVN_NM), gugunnm = VALUES(gugunnm), opende = VALUES(opende), updt_dt = NOW()";
-            String insertQuery = "INSERT INTO kcisa.kopis_공연시설 (REGIST_DE, fcltynm, mt10id, mt13cnt, fcltychartr, CTPRVN_CD, CTPRVN_NM, gugunnm, opende) VALUE  (?, ?, ?, ?, ?, ?, (SELECT CTPRVN_NM FROM kcisa.CTPRVN_INFO WHERE CTPRVN_CD = ?), ?, ?)";
+            String insertQuery = "INSERT INTO COLCT_PBLPRFR_FCLTY_INFO (PBLPRFR_FCLTY_ID,PBLPRFR_FCLTY_NM,PRFPLC_CO,FCLTY_CHARTR,CTPRVN_CD,CTPRVN_NM,SIGNGU_NM,OPNNG_YEAR,COLCT_YM) VALUES (?,?,?,?,?,(SELECT CTPRVN_NM FROM CTPRVN_INFO AS C WHERE C.CTPRVN_CD = ?),?,?,DATE_FORMAT(NOW(), '%Y%m')) ON DUPLICATE KEY UPDATE PBLPRFR_FCLTY_NM=VALUES(PBLPRFR_FCLTY_NM),PRFPLC_CO=VALUES(PRFPLC_CO),FCLTY_CHARTR=VALUES(FCLTY_CHARTR),CTPRVN_NM=VALUES(CTPRVN_NM),SIGNGU_NM=VALUES(SIGNGU_NM),OPNNG_YEAR=VALUES(OPNNG_YEAR),UPDT_YM=DATE_FORMAT(NOW(), '%Y%m')";
             PreparedStatement pstmt = connection.prepareStatement(insertQuery);
 
             while (true) {
@@ -80,27 +78,18 @@ public class KopisPlaceJob extends QuartzJobBean {
                 String url = "/openApi/restful/prfplc?service=" + key + "&cpage=" + finalCPage + "&rows=100";
                 String response = webClient.get().uri(url).retrieve().bodyToMono(String.class).block();
 
-
                 JsonNode responseJson = xmlMapper.readValue(response, JsonNode.class);
 
                 if (responseJson.has("db")) {
                     for (JsonNode node : responseJson.get("db")) {
-//                        pstmt.setString(1, node.get("fcltynm").asText());
-//                        pstmt.setString(2, node.get("mt10id").asText());
-//                        pstmt.setString(3, node.get("mt13cnt").asText());
-//                        pstmt.setString(4, node.get("fcltychartr").asText());
-//                        pstmt.setString(5, node.get("sidonm").asText());
-//                        pstmt.setString(6, node.get("gugunnm").asText());
-//                        pstmt.setString(7, node.get("opende").asText());
-                        pstmt.setString(1, date);
+                        pstmt.setString(1, node.get("mt10id").asText());
                         pstmt.setString(2, node.get("fcltynm").asText());
-                        pstmt.setString(3, node.get("mt10id").asText());
-                        pstmt.setString(4, node.get("mt13cnt").asText());
-                        pstmt.setString(5, node.get("fcltychartr").asText());
+                        pstmt.setString(3, node.get("mt13cnt").asText());
+                        pstmt.setString(4, node.get("fcltychartr").asText());
+                        pstmt.setString(5, regionMap.get(node.get("sidonm").asText()));
                         pstmt.setString(6, regionMap.get(node.get("sidonm").asText()));
-                        pstmt.setString(7, regionMap.get(node.get("sidonm").asText()));
-                        pstmt.setString(8, node.get("gugunnm").asText());
-                        pstmt.setString(9, node.get("opende").asText());
+                        pstmt.setString(7, node.get("gugunnm").asText());
+                        pstmt.setString(8, node.get("opende").asText());
 
                         pstmt.addBatch();
                         count++;
@@ -117,10 +106,12 @@ public class KopisPlaceJob extends QuartzJobBean {
                 throw new Exception("getUpdtCount error");
             }
 
-            schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count, count - updtCount.get(), updtCount.get()));
+            schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count,
+                    count - updtCount.get(), updtCount.get()));
         } catch (Exception e) {
             e.printStackTrace();
-            schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, e.getMessage()));
+            schedulerLogService
+                    .create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, e.getMessage()));
         }
     }
 }
