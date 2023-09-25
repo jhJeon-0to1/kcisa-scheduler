@@ -38,15 +38,15 @@ public class KopisConfiguration {
                                                 .withRepeatCount(0))
                                 .build();
                 Trigger kopisPlaceTrigger = TriggerBuilder.newTrigger().forJob(kopisPlaceJobDetail)
-                                // .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(60)
-                                // .withRepeatCount(0))
-                                .withSchedule(CronScheduleBuilder.cronSchedule("0 0 2 2 * ?")
-                                                .inTimeZone(TimeZone.getTimeZone("Asia/Seoul")))
+                                .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(60)
+                                .withRepeatCount(0))
+                                // .withSchedule(CronScheduleBuilder.cronSchedule("0 0 2 2 * ?")
+                                //                 .inTimeZone(TimeZone.getTimeZone("Asia/Seoul")))
                                 .build();
                 Trigger kopisPlaceDescTrigger = TriggerBuilder.newTrigger().forJob(kopisPlaceDetailJobDetail)
                                 .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(60)
                                                 .withRepeatCount(0))
-                                // .withSchedule(CronScheduleBuilder.cronSchedule("0 0 3-7 2 * ?")
+                                // .withSchedule(CronScheduleBuilder.cronSchedule("0 30 2-7 2 * ?") // 매월 2일 2시부터 7시까지 30분마다 이미 있으면 바로 종료
                                 // .inTimeZone(TimeZone.getTimeZone("Asia/Seoul")))
                                 .build();
 

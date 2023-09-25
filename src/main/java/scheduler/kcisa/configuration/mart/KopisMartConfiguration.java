@@ -4,9 +4,7 @@ import org.quartz.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 
-import scheduler.kcisa.job.mart.mobile.KopisPlaceMartJob;
-
-import java.util.TimeZone;
+import scheduler.kcisa.job.mart.kopis.KopisPlaceMartJob;
 
 import javax.annotation.PostConstruct;
 
@@ -27,7 +25,7 @@ public class KopisMartConfiguration {
                 Trigger placeMartTrigger = TriggerBuilder.newTrigger().forJob(placeMartJobDetail)
                                 .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(60)
                                                 .withRepeatCount(0))
-                                // .withSchedule(CronScheduleBuilder.cronSchedule("0 0 4-7 2 * ?")
+                                // .withSchedule(CronScheduleBuilder.cronSchedule("0 0 3-7 2 * ?")
                                 // .inTimeZone(TimeZone.getTimeZone("Asia/Seoul")))
                                 .build();
 

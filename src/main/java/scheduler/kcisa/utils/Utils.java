@@ -1,7 +1,12 @@
 package scheduler.kcisa.utils;
 
+import org.quartz.JobExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import scheduler.kcisa.model.SchedulerStatus;
+import scheduler.kcisa.model.mart.MartSchedulerLog;
+import scheduler.kcisa.service.MartSchedulerLogService;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -15,10 +20,12 @@ import java.util.Set;
 @Component
 public class Utils {
     private static Connection connection;
+    static MartSchedulerLogService martSchedulerLogService;
 
     @Autowired
-    public Utils(DataSource dataSource) throws Exception {
+    public Utils(DataSource dataSource, MartSchedulerLogService martSchedulerLogService) throws Exception {
         connection = dataSource.getConnection();
+        Utils.martSchedulerLogService = martSchedulerLogService;
     }
 
     public static Optional<Integer> getUpdtCount(String tableName) throws Exception {
@@ -47,10 +54,10 @@ public class Utils {
         }
     }
 
-    public static Boolean checkAlreadyExist(String tableName, String date) throws Exception {
+    public static Boolean checkAlreadyExist(String tableName, String date, JobExecutionContext context) throws Exception {
         try {
             Boolean isMonth = date.length() == 6;
-            String dateQuery = isMonth ? "BASE_YM" : "BASE_DT";
+            String dateQuery = isMonth ? "BASE_YM" : "BASE_DE";
 
             String query = "SELECT COUNT(*) AS count FROM analysis_etl." + tableName + " WHERE " + dateQuery + "= ?";
             PreparedStatement countPstmt = connection.prepareStatement(query);
@@ -63,7 +70,16 @@ public class Utils {
             }
             countPstmt.close();
 
-            return count > 0;
+            if (count > 0) {
+                return true;
+            } else {
+                String groupName = context.getJobDetail().getKey().getGroup();
+                String jobName = context.getJobDetail().getKey().getName();
+
+                martSchedulerLogService.create(new MartSchedulerLog(groupName, jobName, tableName,SchedulerStatus.STARTED));
+
+                return false;
+            }
         } catch (Exception e) {
             e.printStackTrace();
             throw new Exception("분석된 데이터를 확인하는 중 오류가 발생했습니다.");
