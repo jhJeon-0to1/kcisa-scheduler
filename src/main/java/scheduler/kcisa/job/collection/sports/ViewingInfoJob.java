@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Component
-public class SportsRegionJob extends QuartzJobBean {
+public class ViewingInfoJob extends QuartzJobBean {
     DataSource dataSource;
     SchedulerLogService schedulerLogService;
     String url = "http://data.prosports.or.kr/spectator/m0204/ajax/searchall";
@@ -37,7 +37,7 @@ public class SportsRegionJob extends QuartzJobBean {
     Connection connection;
 
     @Autowired
-    public SportsRegionJob(DataSource dataSource, SchedulerLogService schedulerLogService) throws SQLException {
+    public ViewingInfoJob(DataSource dataSource, SchedulerLogService schedulerLogService) throws SQLException {
         this.dataSource = dataSource;
         this.schedulerLogService = schedulerLogService;
         connection = dataSource.getConnection();
@@ -75,7 +75,7 @@ public class SportsRegionJob extends QuartzJobBean {
             String month = stdDate.format(DateTimeFormatter.ofPattern("MM"));
             String day = stdDate.format(DateTimeFormatter.ofPattern("dd"));
 
-            String inputQuery = "INSERT analysis_etl.COLCT_SPORTS_VIEWNG_INFO (BASE_DE, BASE_YEAR, BASE_MT, BASE_DAY, CTPRVN_CD, CTPRVN_NM, KLEA_VIEWING_NMPR_CO, KBO_VIEWING_NMPR_CO, KBL_VIEWING_NMPR_CO, WKBL_VIEWING_NMPR_CO, KOVO_VIEWING_NMPR_CO, SPORTS_VIEWING_NMPR_CO, KLEA_MATCH_CO, KBO_MATCH_CO, KBL_MATCH_CO, WKBL_MATCH_CO, KOVO_MATCH_CO, SPORTS_MATCH_CO, COLCT_DE) VALUE (?, ?, ?, ?, ?, (SELECT CTPRVN_NM FROM CTPRVN_INFO AS C WHERE C.CTPRVN_CD = ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DATE_FORMAT(NOW(), '%Y%m%d')) ON DUPLICATE KEY UPDATE BASE_DE = VALUES(BASE_DE) , BASE_YEAR = VALUES(BASE_YEAR) , BASE_MT = VALUES(BASE_MT) , BASE_DAY = VALUES(BASE_DAY) , CTPRVN_CD = VALUES(CTPRVN_CD) , KLEA_VIEWING_NMPR_CO = VALUES(KLEA_VIEWING_NMPR_CO) , KBO_VIEWING_NMPR_CO = VALUES(KBO_VIEWING_NMPR_CO) , KBL_VIEWING_NMPR_CO = VALUES(KBL_VIEWING_NMPR_CO) , WKBL_VIEWING_NMPR_CO = VALUES(WKBL_VIEWING_NMPR_CO) , KOVO_VIEWING_NMPR_CO = VALUES(KOVO_VIEWING_NMPR_CO) , SPORTS_VIEWING_NMPR_CO = VALUES(SPORTS_VIEWING_NMPR_CO) , KLEA_MATCH_CO = VALUES(KLEA_MATCH_CO) , KBO_MATCH_CO = VALUES(KBO_MATCH_CO) , KBL_MATCH_CO = VALUES(KBL_MATCH_CO) , WKBL_MATCH_CO = VALUES(WKBL_MATCH_CO) , KOVO_MATCH_CO = VALUES(KOVO_MATCH_CO) , SPORTS_MATCH_CO = VALUES(SPORTS_MATCH_CO), UPDT_DE = DATE_FORMAT(NOW(), '%Y%m%d')";
+            String inputQuery = "INSERT analysis_etl.COLCT_SPORTS_VIEWNG_INFO (BASE_DE, BASE_YEAR, BASE_MT, BASE_DAY, CTPRVN_CD, CTPRVN_NM, KLEA_VIEWNG_NMPR_CO, KBO_VIEWNG_NMPR_CO, KBL_VIEWNG_NMPR_CO, WKBL_VIEWNG_NMPR_CO, KOVO_VIEWNG_NMPR_CO, SPORTS_VIEWNG_NMPR_CO, KLEA_MATCH_CO, KBO_MATCH_CO, KBL_MATCH_CO, WKBL_MATCH_CO, KOVO_MATCH_CO, SPORTS_MATCH_CO, COLCT_DE) VALUE (?, ?, ?, ?, ?, (SELECT CTPRVN_NM FROM CTPRVN_INFO AS C WHERE C.CTPRVN_CD = ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DATE_FORMAT(NOW(), '%Y%m%d')) ON DUPLICATE KEY UPDATE BASE_DE = VALUES(BASE_DE) , BASE_YEAR = VALUES(BASE_YEAR) , BASE_MT = VALUES(BASE_MT) , BASE_DAY = VALUES(BASE_DAY) , CTPRVN_CD = VALUES(CTPRVN_CD) , KLEA_VIEWNG_NMPR_CO = VALUES(KLEA_VIEWNG_NMPR_CO) , KBO_VIEWNG_NMPR_CO = VALUES(KBO_VIEWNG_NMPR_CO) , KBL_VIEWNG_NMPR_CO = VALUES(KBL_VIEWNG_NMPR_CO) , WKBL_VIEWNG_NMPR_CO = VALUES(WKBL_VIEWNG_NMPR_CO) , KOVO_VIEWNG_NMPR_CO = VALUES(KOVO_VIEWNG_NMPR_CO) , SPORTS_VIEWNG_NMPR_CO = VALUES(SPORTS_VIEWNG_NMPR_CO) , KLEA_MATCH_CO = VALUES(KLEA_MATCH_CO) , KBO_MATCH_CO = VALUES(KBO_MATCH_CO) , KBL_MATCH_CO = VALUES(KBL_MATCH_CO) , WKBL_MATCH_CO = VALUES(WKBL_MATCH_CO) , KOVO_MATCH_CO = VALUES(KOVO_MATCH_CO) , SPORTS_MATCH_CO = VALUES(SPORTS_MATCH_CO), UPDT_DE = DATE_FORMAT(NOW(), '%Y%m%d')";
 
             PreparedStatement pstmt = connection.prepareStatement(inputQuery);
 

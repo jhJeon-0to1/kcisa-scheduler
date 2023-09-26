@@ -32,7 +32,7 @@ public class SchedulerLog {
     @Column(length = 200, name = "COLCT_STATE_CD")
     private SchedulerStatus status;
 
-    @Column(name = "ALL_CO", columnDefinition = "DECIMAL(28,5)")
+    @Column(name = "COLCT_CO", columnDefinition = "DECIMAL(28,5)")
     private Integer count;
 
     @Column(name = "CRTN_CO", columnDefinition = "DECIMAL(28,5)")

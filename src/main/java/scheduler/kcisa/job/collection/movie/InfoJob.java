@@ -1,8 +1,8 @@
-package scheduler.kcisa.job.collection.kobis;
+package scheduler.kcisa.job.collection.movie;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.quartz.JobExecutionContext;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -15,17 +15,19 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 @Component
-public class KobisMovieJob extends QuartzJobBean {
+public class InfoJob extends QuartzJobBean {
     DataSource dataSource;
     SchedulerLogService schedulerLogService;
     Connection connection;
     WebClient webClient = WebClient.builder().baseUrl("https://www.kobis.or.kr").build();
+    @Value("${kobis.api.key}")
+    String key;
 
-    @Autowired
-    public KobisMovieJob(DataSource dataSource, SchedulerLogService schedulerLogService) {
+    public InfoJob(DataSource dataSource, SchedulerLogService schedulerLogService) {
         this.dataSource = dataSource;
         this.schedulerLogService = schedulerLogService;
     }
@@ -34,7 +36,7 @@ public class KobisMovieJob extends QuartzJobBean {
     protected void executeInternal(JobExecutionContext context) {
         String groupName = context.getJobDetail().getKey().getGroup();
         String jobName = context.getJobDetail().getKey().getName();
-        String tableName = "kobis_movie";
+        String tableName = "COLCT_MOVIE_INFO";
 
         try {
             int count = 0;
@@ -42,13 +44,14 @@ public class KobisMovieJob extends QuartzJobBean {
 
             connection = dataSource.getConnection();
 
-            String insertQuery = "INSERT INTO kcisa.kobis_movie (movieCd, movieNm, movieNmEn, prdtYear, openDt, typeNm, prdtStatNm, nationAlt, genreAlt, repNationNm, repGenreNm) VALUE (?, ?, ?, ?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE movieNm = VALUES(movieNm), movieNmEn = VALUES(movieNmEn), prdtYear = VALUES(prdtYear), openDt = VALUES(openDt), typeNm = VALUES(typeNm), prdtStatNm = VALUES(prdtStatNm), nationAlt = VALUES(nationAlt), genreAlt = VALUES(genreAlt), repNationNm = VALUES(repNationNm), repGenreNm = VALUES(repGenreNm), updt_dt = NOW()";
+            String insertQuery = Utils.getSQLString("src/main/resources/sql/collection/movie/Info.sql");
             PreparedStatement pstmt = connection.prepareStatement(insertQuery);
 
-            String year = LocalDate.now().minusDays(2).toString().substring(0, 4);
+            String year = LocalDate.now().minusDays(2).format(DateTimeFormatter.ofPattern("yyyy"));
+
             int page = 1;
             while (true) {
-                String url = "/kobisopenapi/webservice/rest/movie/searchMovieList.json?key=b7cd95215c53bf9cd09563af6a1fd3ca&curPage=" + page + "&itemPerPage=100&openStartDt=" + year + "&openEndDt=" + year;
+                String url = "/kobisopenapi/webservice/rest/movie/searchMovieList.json?key=" + key + "&curPage=" + page + "&itemPerPage=100&openStartDt=" + year + "&openEndDt=" + year;
 
                 JsonNode response = webClient.get().uri(url).retrieve().bodyToMono(JsonNode.class).block();
                 if (response == null) {
@@ -68,8 +71,6 @@ public class KobisMovieJob extends QuartzJobBean {
                     String movieNmEn = movie.get("movieNmEn").asText();
                     String prdtYear = movie.get("prdtYear").asText();
                     String openDt = movie.get("openDt").asText();
-                    String typeNm = movie.get("typeNm").asText();
-                    String prdtStatNm = movie.get("prdtStatNm").asText();
                     String nationAlt = movie.get("nationAlt").asText();
                     String genreAlt = movie.get("genreAlt").asText();
                     String repNationNm = movie.get("repNationNm").asText();
@@ -80,12 +81,10 @@ public class KobisMovieJob extends QuartzJobBean {
                     pstmt.setString(3, movieNmEn);
                     pstmt.setString(4, prdtYear);
                     pstmt.setString(5, openDt);
-                    pstmt.setString(6, typeNm);
-                    pstmt.setString(7, prdtStatNm);
-                    pstmt.setString(8, nationAlt);
-                    pstmt.setString(9, genreAlt);
-                    pstmt.setString(10, repNationNm);
-                    pstmt.setString(11, repGenreNm);
+                    pstmt.setString(6, nationAlt);
+                    pstmt.setString(7, genreAlt);
+                    pstmt.setString(8, repNationNm);
+                    pstmt.setString(9, repGenreNm);
 
                     pstmt.addBatch();
                     count++;
@@ -103,6 +102,12 @@ public class KobisMovieJob extends QuartzJobBean {
         } catch (Exception e) {
             e.printStackTrace();
             schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, e.getMessage()));
+        } finally {
+            try {
+                connection.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 }

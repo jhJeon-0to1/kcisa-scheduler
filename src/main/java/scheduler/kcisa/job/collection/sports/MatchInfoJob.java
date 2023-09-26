@@ -25,7 +25,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Component
-public class SportsDailyJob extends QuartzJobBean {
+public class MatchInfoJob extends QuartzJobBean {
     DataSource dataSource;
     SchedulerLogService schedulerLogService;
     String url = "http://data.prosports.or.kr/spectator/m0201/ajax/search";
@@ -34,7 +34,7 @@ public class SportsDailyJob extends QuartzJobBean {
     Connection connection;
 
     @Autowired
-    public SportsDailyJob(DataSource dataSource, SchedulerLogService schedulerLogService) throws Exception {
+    public MatchInfoJob(DataSource dataSource, SchedulerLogService schedulerLogService) throws Exception {
         this.dataSource = dataSource;
         this.schedulerLogService = schedulerLogService;
 
