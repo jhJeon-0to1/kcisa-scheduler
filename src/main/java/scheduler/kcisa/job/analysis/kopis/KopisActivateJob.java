@@ -1,17 +1,15 @@
-package scheduler.kcisa.job.mart.kopis;
-
-import java.sql.Connection;
-
-import javax.sql.DataSource;
+package scheduler.kcisa.job.analysis.kopis;
 
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.quartz.QuartzJobBean;
-
 import scheduler.kcisa.model.SchedulerStatus;
 import scheduler.kcisa.model.mart.MartSchedulerLog;
 import scheduler.kcisa.service.MartSchedulerLogService;
+
+import javax.sql.DataSource;
+import java.sql.Connection;
 
 public class KopisActivateJob extends QuartzJobBean {
     DataSource dataSource;
@@ -39,5 +37,5 @@ public class KopisActivateJob extends QuartzJobBean {
             martSchedulerLogService.create(new MartSchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, e.getMessage()));
         }
     }
-    
+
 }

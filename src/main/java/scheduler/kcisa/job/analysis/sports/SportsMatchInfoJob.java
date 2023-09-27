@@ -1,4 +1,4 @@
-package scheduler.kcisa.job.mart.sports;
+package scheduler.kcisa.job.analysis.sports;
 
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -17,45 +17,37 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 @Component
-public class MtAcctoViewngCrstatJob extends QuartzJobBean {
+public class SportsMatchInfoJob extends QuartzJobBean {
     DataSource dataSource;
     MartSchedulerLogService martSchedulerLogService;
     Connection connection;
-    String tableName = "SPORTS_MT_ACCTO_VIEWNG_CRSTAT";
+    String tableName = "SPORTS_MATCH_INFO";
 
     @Autowired
-    public MtAcctoViewngCrstatJob(DataSource dataSource, MartSchedulerLogService martSchedulerLogService) {
+    public SportsMatchInfoJob(DataSource dataSource, MartSchedulerLogService martSchedulerLogService) {
         this.dataSource = dataSource;
         this.martSchedulerLogService = martSchedulerLogService;
     }
 
     @Override
     protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
+
         String groupName = context.getJobDetail().getKey().getGroup();
         String jobName = context.getJobDetail().getKey().getName();
 
-        LocalDate stdDate = LocalDate.now().minusMonths(1);
-        String stdDateStr = stdDate.format(DateTimeFormatter.ofPattern("yyyyMM"));
-        String stdYear = stdDate.format(DateTimeFormatter.ofPattern("yyyy"));
-        String stdMonth = stdDate.format(DateTimeFormatter.ofPattern("MM"));
+        LocalDate stdDate = LocalDate.now().minusDays(2);
+        String stdDateStr = stdDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
         try {
             connection = dataSource.getConnection();
 
-            Boolean isExist = Utils.checkAlreadyExist(tableName, stdDateStr, context);
+            martSchedulerLogService
+                    .create(new MartSchedulerLog(groupName, jobName, tableName, SchedulerStatus.STARTED));
 
-            if (isExist) {
-                return;
-            }
-
-            String query = Utils.getSQLString("src/main/resources/sql/mart/sports/MtAcctoViewngCrstat.sql");
+            String query = Utils.getSQLString("src/main/resources/sql/analysis/sports/SportsMatchInfo.sql");
 
             PreparedStatement pstmt = connection.prepareStatement(query);
-
-            pstmt.setString(1, stdYear);
-            pstmt.setString(2, stdMonth);
-            pstmt.setString(3, stdYear);
-            pstmt.setString(4, stdMonth);
+            pstmt.setString(1, stdDateStr);
 
             int count = pstmt.executeUpdate();
 

@@ -1,9 +1,9 @@
-package scheduler.kcisa.configuration.mart;
+package scheduler.kcisa.configuration.analysis;
 
 import org.quartz.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import scheduler.kcisa.job.mart.kopis.KopisPlaceStateJob;
+import scheduler.kcisa.job.analysis.kopis.KopisPlaceStateJob;
 
 import javax.annotation.PostConstruct;
 

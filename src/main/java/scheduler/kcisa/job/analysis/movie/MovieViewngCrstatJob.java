@@ -1,8 +1,7 @@
-package scheduler.kcisa.job.mart.sports;
+package scheduler.kcisa.job.analysis.movie;
 
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.stereotype.Component;
 import scheduler.kcisa.model.SchedulerStatus;
@@ -17,14 +16,13 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 @Component
-public class SportsViewngCrstatJob extends QuartzJobBean {
+public class MovieViewngCrstatJob extends QuartzJobBean {
     DataSource dataSource;
     MartSchedulerLogService martSchedulerLogService;
+    String tableName = "MOVIE_VIEWNG_CRSTAT";
     Connection connection;
-    String tableName = "SPORTS_VIEWNG_CRSTAT";
 
-    @Autowired
-    public SportsViewngCrstatJob(DataSource dataSource, MartSchedulerLogService martSchedulerLogService) {
+    public MovieViewngCrstatJob(DataSource dataSource, MartSchedulerLogService martSchedulerLogService) {
         this.dataSource = dataSource;
         this.martSchedulerLogService = martSchedulerLogService;
     }
@@ -36,32 +34,29 @@ public class SportsViewngCrstatJob extends QuartzJobBean {
 
         LocalDate stdDate = LocalDate.now().minusDays(2);
         String stdDateStr = stdDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-
         try {
             connection = dataSource.getConnection();
 
-            Boolean isExist = Utils.checkAlreadyExist(tableName, stdDateStr, context);
+            martSchedulerLogService.create(new MartSchedulerLog(groupName, jobName, tableName, SchedulerStatus.STARTED));
 
-            if (isExist) {
-                return;
-            }
-
-            String query = Utils.getSQLString("src/main/resources/sql/mart/sports/SportsViewngCrstat.sql");
+            String query = Utils.getSQLString("src/main/resources/sql/analysis/movie/MovieViewngCrstat.sql");
 
             PreparedStatement pstmt = connection.prepareStatement(query);
-
             pstmt.setString(1, stdDateStr);
             pstmt.setString(2, stdDateStr);
 
             int count = pstmt.executeUpdate();
 
-            martSchedulerLogService.create(
-                    new MartSchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count));
-
+            martSchedulerLogService.create(new MartSchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count));
         } catch (Exception e) {
             e.printStackTrace();
-            martSchedulerLogService.create(
-                    new MartSchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, e.getMessage()));
+            martSchedulerLogService.create(new MartSchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, e.getMessage()));
+        } finally {
+            try {
+                connection.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 }

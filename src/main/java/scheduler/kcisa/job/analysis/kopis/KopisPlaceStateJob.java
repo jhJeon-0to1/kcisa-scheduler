@@ -1,21 +1,19 @@
-package scheduler.kcisa.job.mart.kopis;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-
-import javax.sql.DataSource;
+package scheduler.kcisa.job.analysis.kopis;
 
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.stereotype.Component;
-
 import scheduler.kcisa.model.SchedulerStatus;
 import scheduler.kcisa.model.mart.MartSchedulerLog;
 import scheduler.kcisa.service.MartSchedulerLogService;
 import scheduler.kcisa.utils.Utils;
+
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @Component
 public class KopisPlaceStateJob extends QuartzJobBean {
