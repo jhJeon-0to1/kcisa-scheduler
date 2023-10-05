@@ -3,7 +3,7 @@ package scheduler.kcisa;
 import org.quartz.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import scheduler.kcisa.job.collection.common.CTPRVNJob;
+import scheduler.kcisa.job.collection.common.CtprvnAcctoPopltnInfo;
 
 import javax.annotation.PostConstruct;
 
@@ -18,7 +18,7 @@ public class JobConfiguration {
 
     @PostConstruct
     public void start() throws SchedulerException {
-        JobDetail peoplePerCityJobDetail = JobBuilder.newJob(CTPRVNJob.class).withIdentity("시도 인구 추가", "TEST").build();
+        JobDetail peoplePerCityJobDetail = JobBuilder.newJob(CtprvnAcctoPopltnInfo.class).withIdentity("시도 인구 추가", "TEST").build();
 
 
         Trigger peoplePerCityTrigger = TriggerBuilder.newTrigger().forJob(peoplePerCityJobDetail)

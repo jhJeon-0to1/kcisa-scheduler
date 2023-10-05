@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Component
-public class CTPRVNJob extends QuartzJobBean {
+public class CtprvnAcctoPopltnInfo extends QuartzJobBean {
     private final String tableName = "CTPRVN_ACCTO_POPLTN_INFO";
     private final DataSource dataSource;
     private final SchedulerLogService schedulerLogService;
@@ -32,7 +32,7 @@ public class CTPRVNJob extends QuartzJobBean {
     String url = "https://jumin.mois.go.kr/statMonth.do";
 
     @Autowired
-    public CTPRVNJob(DataSource dataSource, SchedulerLogService schedulerLogService) {
+    public CtprvnAcctoPopltnInfo(DataSource dataSource, SchedulerLogService schedulerLogService) {
         this.dataSource = dataSource;
         this.schedulerLogService = schedulerLogService;
     }

@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Component
-public class KopisPlaceJob extends QuartzJobBean {
+public class PblprfrFcltyInfo extends QuartzJobBean {
     DataSource dataSource;
     SchedulerLogService schedulerLogService;
     @Value("${kopis.api.key}")
@@ -32,7 +32,7 @@ public class KopisPlaceJob extends QuartzJobBean {
     Map<String, String> regionMap = new HashMap<>();
 
     @Autowired
-    public KopisPlaceJob(DataSource dataSource, SchedulerLogService schedulerLogService) {
+    public PblprfrFcltyInfo(DataSource dataSource, SchedulerLogService schedulerLogService) {
         this.dataSource = dataSource;
         this.schedulerLogService = schedulerLogService;
 

@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.Optional;
 
 @Component
-public class KopisPlaceDetailJob extends QuartzJobBean {
+public class PblprfrFcltyDetailInfo extends QuartzJobBean {
     DataSource dataSource;
     SchedulerLogService schedulerLogService;
     @Value("${kopis.api.key}")
@@ -34,7 +34,7 @@ public class KopisPlaceDetailJob extends QuartzJobBean {
     WebClient webClient = WebClient.builder().baseUrl("http://kopis.or.kr/openApi/restful/prfplc").build();
 
     @Autowired
-    public KopisPlaceDetailJob(DataSource dataSource, SchedulerLogService schedulerLogService) {
+    public PblprfrFcltyDetailInfo(DataSource dataSource, SchedulerLogService schedulerLogService) {
         this.dataSource = dataSource;
         this.schedulerLogService = schedulerLogService;
     }
@@ -110,7 +110,7 @@ public class KopisPlaceDetailJob extends QuartzJobBean {
             Boolean isAlreadyCollect = checkAlreadyCollect(date);
 
             if (isAlreadyCollect) {
-                System.out.println("이미 수집된 데이터입니다.");
+                System.out.println("시설 상세 정보가 이미 업데이트 되었습니다.");
 
                 return;
             }
