@@ -16,13 +16,13 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 @Component
-public class MovieActivateCrstatJob extends QuartzJobBean {
+public class MtAcctoMovieViewngCrstatJob extends QuartzJobBean {
     DataSource dataSource;
     MartSchedulerLogService martSchedulerLogService;
+    String tableName = "MOVIE_MT_ACCTO_VIEWNG_CRSTAT";
     Connection connection;
-    String tableName = "MOVIE_ACTIVATE_CRSTAT";
 
-    public MovieActivateCrstatJob(DataSource dataSource, MartSchedulerLogService martSchedulerLogService) {
+    public MtAcctoMovieViewngCrstatJob(DataSource dataSource, MartSchedulerLogService martSchedulerLogService) {
         this.dataSource = dataSource;
         this.martSchedulerLogService = martSchedulerLogService;
     }
@@ -34,7 +34,6 @@ public class MovieActivateCrstatJob extends QuartzJobBean {
 
         LocalDate stdDate = LocalDate.now().minusMonths(1);
         String stdDateStr = stdDate.format(DateTimeFormatter.ofPattern("yyyyMM"));
-
         try {
             connection = dataSource.getConnection();
 
@@ -44,8 +43,7 @@ public class MovieActivateCrstatJob extends QuartzJobBean {
                 return;
             }
 
-            
-            String query = Utils.getSQLString("src/main/resources/sql/analysis/movie/MovieActivateCrstat.sql");
+            String query = Utils.getSQLString("src/main/resources/sql/analysis/movie/MtAcctoMovieViewngCrstat.sql");
 
             PreparedStatement pstmt = connection.prepareStatement(query);
             pstmt.setString(1, stdDateStr);

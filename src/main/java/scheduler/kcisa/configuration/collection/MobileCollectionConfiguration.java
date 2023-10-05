@@ -3,16 +3,16 @@ package scheduler.kcisa.configuration.collection;
 import org.quartz.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import scheduler.kcisa.job.collection.mobile.MobileIndexJob;
+import scheduler.kcisa.job.collection.mobile.MobileCtgryUseQyInfo;
 
 import javax.annotation.PostConstruct;
 
 @Configuration
-public class MobileConfiguration {
+public class MobileCollectionConfiguration {
     private final Scheduler scheduler;
 
     @Autowired
-    protected MobileConfiguration(Scheduler scheduler) {
+    protected MobileCollectionConfiguration(Scheduler scheduler) {
         this.scheduler = scheduler;
     }
 
@@ -23,7 +23,7 @@ public class MobileConfiguration {
         // mobileJobDataMap.put("maxRetryCount", 3);
         // mobileJobDataMap.put("cronExpression", "0 0 2 * * ?");
 
-        JobDetail mobileJobDetail = JobBuilder.newJob(MobileIndexJob.class)
+        JobDetail mobileJobDetail = JobBuilder.newJob(MobileCtgryUseQyInfo.class)
                 .withIdentity("모바일 카테고리 이용량 정보 수집", "모바일 이용량")
                 // .usingJobData(mobileJobDataMap)
                 .build();

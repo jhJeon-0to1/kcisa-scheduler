@@ -42,7 +42,6 @@ public class MovieCollectionConfiguration {
                 .build();
 //        scheduler.scheduleJob(SalesStatsJobDetail, SalesStatsTrigger); // 영화 일별 매출액 수집
 
-
         JobDetail MtAcctoSalesStatsJobDetail = JobBuilder.newJob(MtAcctoSalesStatsJob.class).withIdentity("영화 월별 매출액 수집", "영화 관람").build();
         Trigger MtAcctoSalesStatsTrigger = TriggerBuilder.newTrigger().forJob(MtAcctoSalesStatsJobDetail)
                 .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(60)
@@ -58,6 +57,6 @@ public class MovieCollectionConfiguration {
                         .withRepeatCount(0))
 //                .withSchedule(CronScheduleBuilder.cronSchedule("0 0 2 2 * ?")) // 매월 2일 2시에 실행
                 .build();
-        scheduler.scheduleJob(InfoJobDetail, InfoTrigger); // 영화 정보 수집
+//        scheduler.scheduleJob(InfoJobDetail, InfoTrigger); // 영화 정보 수집
     }
 }

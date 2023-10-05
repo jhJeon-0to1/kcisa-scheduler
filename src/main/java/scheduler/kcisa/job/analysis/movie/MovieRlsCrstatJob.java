@@ -16,13 +16,13 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 @Component
-public class MovieActivateCrstatJob extends QuartzJobBean {
+public class MovieRlsCrstatJob extends QuartzJobBean {
     DataSource dataSource;
     MartSchedulerLogService martSchedulerLogService;
+    String tableName = "MOVIE_RLS_CRSTAT";
     Connection connection;
-    String tableName = "MOVIE_ACTIVATE_CRSTAT";
 
-    public MovieActivateCrstatJob(DataSource dataSource, MartSchedulerLogService martSchedulerLogService) {
+    public MovieRlsCrstatJob(DataSource dataSource, MartSchedulerLogService martSchedulerLogService) {
         this.dataSource = dataSource;
         this.martSchedulerLogService = martSchedulerLogService;
     }
@@ -32,8 +32,8 @@ public class MovieActivateCrstatJob extends QuartzJobBean {
         String groupName = context.getJobDetail().getKey().getGroup();
         String jobName = context.getJobDetail().getKey().getName();
 
-        LocalDate stdDate = LocalDate.now().minusMonths(1);
-        String stdDateStr = stdDate.format(DateTimeFormatter.ofPattern("yyyyMM"));
+        LocalDate stdDate = LocalDate.now().minusDays(2);
+        String stdDateStr = stdDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
         try {
             connection = dataSource.getConnection();
@@ -44,12 +44,14 @@ public class MovieActivateCrstatJob extends QuartzJobBean {
                 return;
             }
 
-            
-            String query = Utils.getSQLString("src/main/resources/sql/analysis/movie/MovieActivateCrstat.sql");
+            martSchedulerLogService.create(new MartSchedulerLog(groupName, jobName, tableName, SchedulerStatus.STARTED));
+
+            String query = Utils.getSQLString("src/main/resources/sql/analysis/movie/MovieRlsCrstat.sql");
 
             PreparedStatement pstmt = connection.prepareStatement(query);
             pstmt.setString(1, stdDateStr);
             pstmt.setString(2, stdDateStr);
+            pstmt.setString(3, stdDateStr);
 
             int count = pstmt.executeUpdate();
 

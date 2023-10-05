@@ -37,8 +37,12 @@ public class MovieViewngCrstatJob extends QuartzJobBean {
         try {
             connection = dataSource.getConnection();
 
-            martSchedulerLogService.create(new MartSchedulerLog(groupName, jobName, tableName, SchedulerStatus.STARTED));
+            Boolean isExist = Utils.checkAlreadyExist(tableName, stdDateStr, context);
 
+            if (isExist) {
+                return;
+            }
+            
             String query = Utils.getSQLString("src/main/resources/sql/analysis/movie/MovieViewngCrstat.sql");
 
             PreparedStatement pstmt = connection.prepareStatement(query);

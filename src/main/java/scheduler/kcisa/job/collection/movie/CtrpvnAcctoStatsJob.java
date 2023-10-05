@@ -59,7 +59,7 @@ public class CtrpvnAcctoStatsJob extends QuartzJobBean {
     protected void executeInternal(JobExecutionContext context) {
         String groupName = context.getJobDetail().getKey().getGroup();
         String jobName = context.getJobDetail().getKey().getName();
-        String tableName = "colct_movie_ctrpvn_accto_stats".toUpperCase();
+        String tableName = "colct_movie_ctprvn_accto_stats".toUpperCase();
         String url = "/kobis/business/stat/them/findAreaShareList.do";
 
         LocalDate stdDate = LocalDate.now().minusDays(2);

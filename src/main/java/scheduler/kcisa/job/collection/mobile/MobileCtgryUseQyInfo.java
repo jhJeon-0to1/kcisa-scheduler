@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.jetbrains.annotations.NotNull;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.stereotype.Component;
@@ -24,7 +23,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 @Component
-public class MobileIndexJob extends QuartzJobBean {
+public class MobileCtgryUseQyInfo extends QuartzJobBean {
     SchedulerLogService schedulerLogService;
     DataSource dataSource;
     String tableName = "COLCT_MOBILE_CTGRY_USE_QY_INFO";
@@ -34,8 +33,8 @@ public class MobileIndexJob extends QuartzJobBean {
     @Value("${mobile.api.key}")
     String apiKey;
 
-    @Autowired
-    public MobileIndexJob(SchedulerLogService schedulerLogService, DataSource dataSource) throws SQLException {
+
+    public MobileCtgryUseQyInfo(SchedulerLogService schedulerLogService, DataSource dataSource) throws SQLException {
         this.schedulerLogService = schedulerLogService;
         this.dataSource = dataSource;
 
