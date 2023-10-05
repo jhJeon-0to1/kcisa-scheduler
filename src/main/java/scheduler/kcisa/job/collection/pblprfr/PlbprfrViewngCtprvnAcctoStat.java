@@ -1,4 +1,4 @@
-package scheduler.kcisa.job.collection.kopis;
+package scheduler.kcisa.job.collection.pblprfr;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.quartz.JobExecutionContext;
@@ -15,6 +15,7 @@ import scheduler.kcisa.utils.Utils;
 
 import javax.sql.DataSource;
 import java.math.BigDecimal;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -24,46 +25,48 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Component
-public class KopisRegionJob extends QuartzJobBean {
-    private final DataSource dataSource;
-    private final SchedulerLogService schedulerLogService;
+public class PlbprfrViewngCtprvnAcctoStat extends QuartzJobBean {
     private final List<String> sidos = Arrays.asList("^11", "^28", "^41", "^30", "^36", "^44", "^43", "^51|^42", "^27", "^26", "^31", "^48", "^47", "^29", "^46", "^45", "^50");
     private final List<String> ctprvn = Arrays.asList("11", "28", "41", "30", "36", "44", "43", "51", "27", "26", "31", "48", "47", "29", "46", "45", "50");
     private final List<String> sido_names = Arrays.asList("서울시", "인천시", "경기도", "대전시", "세종시", "충청남도", "충청북도", "강원도", "대구시", "부산시", "울산시", "경상남도", "경상북도", "광주시", "전라남도", "전라북도", "제주도");
-    String tableName = "pblprfr_viewng_info";
+    DataSource dataSource;
+    SchedulerLogService schedulerLogService;
+    Connection conn = null;
+    String tableName = "PBLPRFR_VIEWNG_CTPRVN_ACCTO_STAT";
     WebClient webClient = WebClient.builder().baseUrl("https://www.kopis.or.kr").build();
     String url = "/por/stats/perfo/perfoStatsTotalList.json";
 
     @Autowired
-    public KopisRegionJob(DataSource dataSource, SchedulerLogService schedulerLogService) {
+    public PlbprfrViewngCtprvnAcctoStat(DataSource dataSource, SchedulerLogService schedulerLogService) {
         this.dataSource = dataSource;
         this.schedulerLogService = schedulerLogService;
     }
 
     @Override
     protected void executeInternal(JobExecutionContext context) {
-        LocalDate yesterDay = LocalDate.now().minusDays(2);
-        String date = yesterDay.format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
-        String year = date.substring(0, 4);
-        String month = date.substring(5, 7);
-        String day = date.substring(8, 10);
+        LocalDate stdDate = LocalDate.now().minusDays(2);
+        String stdDateStr = stdDate.format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
+        String year = stdDateStr.substring(0, 4);
+        String month = stdDateStr.substring(5, 7);
+        String day = stdDateStr.substring(8, 10);
 
         String scheduleName = context.getJobDetail().getKey().getName();
         String scheduleGroup = context.getJobDetail().getKey().getGroup();
 
         try {
+            conn = dataSource.getConnection();
             schedulerLogService.create(new SchedulerLog(scheduleGroup, scheduleName, tableName, SchedulerStatus.STARTED));
 
             int count = 0;
-            String insertQuery = "INSERT INTO kcisa.pblprfr_viewing_info (BASE_DE, BASE_YEAR, BASE_MT, BASE_DAY, CTPRVN_CD, CTPRVN_NM, GENRE_CD, GENRE_NM, PBLPRFR_RASNG_CUTIN_CO, PBLPRFR_CO, PBLPRFR_STGNG_CO, PBLPRFR_SALES_PRICE, PBLPRFR_VIEWNG_NMPR_CO) VALUE (?,?,?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE BASE_YEAR = VALUES(BASE_YEAR), BASE_MT = VALUES(BASE_MT), BASE_DAY = VALUES(BASE_DAY), CTPRVN_NM = VALUES(CTPRVN_NM), GENRE_NM = VALUES(GENRE_NM), PBLPRFR_RASNG_CUTIN_CO = VALUES(PBLPRFR_RASNG_CUTIN_CO), PBLPRFR_CO = VALUES(PBLPRFR_CO), PBLPRFR_STGNG_CO = VALUES(PBLPRFR_STGNG_CO), PBLPRFR_SALES_PRICE = VALUES(PBLPRFR_SALES_PRICE), PBLPRFR_VIEWNG_NMPR_CO = VALUES(PBLPRFR_VIEWNG_NMPR_CO), UPDT_DT = NOW()";
+            String query = Utils.getSQLString("/sql/collection/pblprfr/PlbprfrViewngCtprvnAcctoStat.sql");
 
-            PreparedStatement pstmt = dataSource.getConnection().prepareStatement(insertQuery);
+            PreparedStatement pstmt = conn.prepareStatement(query);
             for (int i = 0; i < sidos.size(); i++) {
                 String sido = sidos.get(i);
                 String sido_name = sido_names.get(i);
                 String ctprvn_cd = ctprvn.get(i);
 
-                String formData = "startDate=" + date + "&endDate=" + date + "&signgu_code=" + sido;
+                String formData = "startDate=" + stdDateStr + "&endDate=" + stdDateStr + "&signgu_code=" + sido;
 
                 JsonNode rows;
                 try {
@@ -80,7 +83,7 @@ public class KopisRegionJob extends QuartzJobBean {
                         String nowGenreCode = row.get("genre_code").asText();
 
                         if (!Objects.equals(nowSido, "합계") && !Objects.equals(nowGenreCode, "null")) {
-                            pstmt.setString(1, date.replace(".", ""));
+                            pstmt.setString(1, stdDateStr.replace(".", ""));
                             pstmt.setString(2, year);
                             pstmt.setString(3, month);
                             pstmt.setString(4, day);

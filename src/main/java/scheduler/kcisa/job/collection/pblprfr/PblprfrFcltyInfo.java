@@ -1,4 +1,4 @@
-package scheduler.kcisa.job.collection.kopis;
+package scheduler.kcisa.job.collection.pblprfr;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;

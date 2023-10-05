@@ -1,4 +1,4 @@
-package scheduler.kcisa.job.collection.kopis;
+package scheduler.kcisa.job.collection.pblprfr;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -70,11 +70,7 @@ public class PblprfrFcltyDetailInfo extends QuartzJobBean {
         }
         countPstmt.close();
 
-        if (nowCount > 0) {
-            return true;
-        } else {
-            return false;
-        }
+        return nowCount > 0;
     }
 
     protected ArrayList<String> getFcltyId(String date) throws Exception {

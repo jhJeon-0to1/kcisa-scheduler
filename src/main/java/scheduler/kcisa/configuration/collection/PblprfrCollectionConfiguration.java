@@ -3,9 +3,9 @@ package scheduler.kcisa.configuration.collection;
 import org.quartz.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import scheduler.kcisa.job.collection.kopis.KopisRegionJob;
-import scheduler.kcisa.job.collection.kopis.PblprfrFcltyDetailInfo;
-import scheduler.kcisa.job.collection.kopis.PblprfrFcltyInfo;
+import scheduler.kcisa.job.collection.pblprfr.PblprfrFcltyDetailInfo;
+import scheduler.kcisa.job.collection.pblprfr.PblprfrFcltyInfo;
+import scheduler.kcisa.job.collection.pblprfr.PlbprfrViewngCtprvnAcctoStat;
 
 import javax.annotation.PostConstruct;
 
@@ -20,7 +20,7 @@ public class PblprfrCollectionConfiguration {
 
     @PostConstruct
     public void start() throws SchedulerException {
-        JobDetail kopisRegionJobDetail = JobBuilder.newJob(KopisRegionJob.class)
+        JobDetail kopisRegionJobDetail = JobBuilder.newJob(PlbprfrViewngCtprvnAcctoStat.class)
                 .withIdentity("공연 지역별 관중 추가", "TEST").build();
         JobDetail PblprfrFcltyInfoJobDetail = JobBuilder.newJob(PblprfrFcltyInfo.class)
                 .withIdentity("공연 시설 정보 수집", "공연 관람")
