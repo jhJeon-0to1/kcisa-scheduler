@@ -2,7 +2,6 @@ package scheduler.kcisa.job.collection.pblprfr;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.quartz.JobExecutionContext;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.stereotype.Component;
@@ -14,7 +13,6 @@ import scheduler.kcisa.utils.CustomException;
 import scheduler.kcisa.utils.Utils;
 
 import javax.sql.DataSource;
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.time.LocalDate;
@@ -31,12 +29,11 @@ public class PlbprfrViewngCtprvnAcctoStat extends QuartzJobBean {
     private final List<String> sido_names = Arrays.asList("서울시", "인천시", "경기도", "대전시", "세종시", "충청남도", "충청북도", "강원도", "대구시", "부산시", "울산시", "경상남도", "경상북도", "광주시", "전라남도", "전라북도", "제주도");
     DataSource dataSource;
     SchedulerLogService schedulerLogService;
-    Connection conn = null;
+    Connection conn;
     String tableName = "PBLPRFR_VIEWNG_CTPRVN_ACCTO_STAT";
     WebClient webClient = WebClient.builder().baseUrl("https://www.kopis.or.kr").build();
     String url = "/por/stats/perfo/perfoStatsTotalList.json";
 
-    @Autowired
     public PlbprfrViewngCtprvnAcctoStat(DataSource dataSource, SchedulerLogService schedulerLogService) {
         this.dataSource = dataSource;
         this.schedulerLogService = schedulerLogService;
@@ -91,16 +88,11 @@ public class PlbprfrViewngCtprvnAcctoStat extends QuartzJobBean {
                             pstmt.setString(6, sido_name);
                             pstmt.setString(7, row.get("genre_code").asText());
                             pstmt.setString(8, row.get("genre_code_nm").asText());
-                            pstmt.setBigDecimal(9, new BigDecimal(row.get("data1").asText()));
-//                            pstmt.setBigDecimal(10, new BigDecimal(row.get("data2").asText()));
-                            pstmt.setBigDecimal(10, new BigDecimal(row.get("data3").asText()));
-//                            pstmt.setBigDecimal(12, new BigDecimal(row.get("data4").asText()));
-                            pstmt.setBigDecimal(11, new BigDecimal(row.get("data16").asText()));
-//                            pstmt.setBigDecimal(14, new BigDecimal(row.get("data17").asText()));
-                            pstmt.setBigDecimal(12, new BigDecimal(row.get("data5").asText()));
-//                            pstmt.setBigDecimal(16, new BigDecimal(row.get("data6").asText()));
-                            pstmt.setBigDecimal(13, new BigDecimal(row.get("data7").asText()));
-//                            pstmt.setBigDecimal(18, new BigDecimal(row.get("data8").asText()));
+                            pstmt.setBigDecimal(9, (row.get("data1").decimalValue()));  // 개막
+                            pstmt.setBigDecimal(10, (row.get("data3").decimalValue())); // 상영
+                            pstmt.setBigDecimal(11, (row.get("data5").decimalValue())); //매출액
+                            pstmt.setBigDecimal(12, (row.get("data7").decimalValue())); //관객수
+                            pstmt.setBigDecimal(13, (row.get("data16").decimalValue())); // 공연수
 
                             pstmt.addBatch();
                             count++;
@@ -117,10 +109,8 @@ public class PlbprfrViewngCtprvnAcctoStat extends QuartzJobBean {
                 throw new Exception("updt_count is null");
             }
             schedulerLogService.create(new SchedulerLog(scheduleGroup, scheduleName, tableName, SchedulerStatus.SUCCESS, count, count - updt_count.get(), updt_count.get()));
-            System.out.println("KOPIS 완료");
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("KOPIS 에러");
             schedulerLogService.create(new SchedulerLog(scheduleGroup, scheduleName, tableName, SchedulerStatus.FAILED, e.getMessage()));
         }
     }

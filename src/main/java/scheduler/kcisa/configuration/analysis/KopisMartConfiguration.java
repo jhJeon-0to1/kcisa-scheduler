@@ -3,7 +3,7 @@ package scheduler.kcisa.configuration.analysis;
 import org.quartz.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import scheduler.kcisa.job.analysis.kopis.KopisPlaceStateJob;
+import scheduler.kcisa.job.analysis.pblprfr.KopisPlaceStateJob;
 
 import javax.annotation.PostConstruct;
 

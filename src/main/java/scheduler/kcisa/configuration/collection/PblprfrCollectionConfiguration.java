@@ -27,8 +27,6 @@ public class PblprfrCollectionConfiguration {
                 .build();
         JobDetail PblprfrFcltyDetailInfoJobDetail = JobBuilder.newJob(PblprfrFcltyDetailInfo.class)
                 .withIdentity("공연 시설 상세 정보 수집", "공연 관람").build();
-        // JobDetail kopisPlaceAllJobDetail = JobBuilder.newJob(KopisPlaceAllJob.class)
-        // .withIdentity("공연 시설 통합 추가", "공연관람").build();
 
         Trigger kopisRegionTrigger = TriggerBuilder.newTrigger().forJob(kopisRegionJobDetail)
                 .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(60)
