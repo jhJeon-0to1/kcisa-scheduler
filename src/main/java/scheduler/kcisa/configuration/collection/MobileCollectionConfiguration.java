@@ -18,24 +18,13 @@ public class MobileCollectionConfiguration {
 
     @PostConstruct
     protected void start() throws SchedulerException {
-        // JobDataMap mobileJobDataMap = new JobDataMap();
-        // mobileJobDataMap.put("retryCount", 0);
-        // mobileJobDataMap.put("maxRetryCount", 3);
-        // mobileJobDataMap.put("cronExpression", "0 0 2 * * ?");
-
         JobDetail mobileJobDetail = JobBuilder.newJob(MobileCtgryUseQyInfo.class)
                 .withIdentity("모바일 카테고리 이용량 정보 수집", "모바일 이용량")
                 // .usingJobData(mobileJobDataMap)
                 .build();
-
         Trigger mobileTrigger = TriggerBuilder.newTrigger().forJob(mobileJobDetail)
                 .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(10).withRepeatCount(0))
                 .build();
-
-        // MobileIndexListener mobileIndexListener = new MobileIndexListener();
-        // scheduler.getListenerManager().addJobListener(mobileIndexListener,
-        // KeyMatcher.keyEquals(mobileJobDetail.getKey()));
-
-        // scheduler.scheduleJob(mobileJobDetail, mobileTrigger);
+//        scheduler.scheduleJob(mobileJobDetail, mobileTrigger);
     }
 }

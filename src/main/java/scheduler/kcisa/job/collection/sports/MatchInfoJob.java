@@ -17,6 +17,7 @@ import scheduler.kcisa.utils.CustomException;
 import scheduler.kcisa.utils.Utils;
 
 import javax.sql.DataSource;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.time.LocalDate;
@@ -90,7 +91,7 @@ public class MatchInfoJob extends QuartzJobBean {
                     pstmt.setString(8, row.get("h_club_name").asText().trim());
                     pstmt.setString(9, row.get("a_club_name").asText().trim());
                     pstmt.setString(10, row.get("stadium_nm").asText().trim());
-                    pstmt.setBigDecimal(11, row.get("spec_num").decimalValue());
+                    pstmt.setBigDecimal(11, new BigDecimal(row.get("spec_num").asText()));
 
                     pstmt.addBatch();
 

@@ -73,12 +73,12 @@ public class MobileCtgryUseQyInfo extends QuartzJobBean {
                 }
                 String categoryMain = data.get("categoryMain").asText();
                 String categorySub = data.get("categorySub").asText();
-                BigDecimal userTotal = data.get("userTotal").decimalValue();
-                BigDecimal userAos = data.get("userAos").decimalValue();
-                BigDecimal userIos = data.get("userIos").decimalValue();
-                BigDecimal timeTotal = data.get("timeTotal").decimalValue();
-                BigDecimal timeAos = data.get("timeAos").decimalValue();
-                BigDecimal timeIos = data.get("timeIos").decimalValue();
+                BigDecimal userTotal = new BigDecimal(data.get("userTotal").asText());
+                BigDecimal userAos = new BigDecimal(data.get("userAos").asText());
+                BigDecimal userIos = new BigDecimal(data.get("userIos").asText());
+                BigDecimal timeTotal = new BigDecimal(data.get("timeTotal").asText());
+                BigDecimal timeAos = new BigDecimal(data.get("timeAos").asText());
+                BigDecimal timeIos = new BigDecimal(data.get("timeIos").asText());
 
                 preparedStatement.setString(1, dateStr + categoryMain + categorySub);
                 preparedStatement.setString(2, dateStr);

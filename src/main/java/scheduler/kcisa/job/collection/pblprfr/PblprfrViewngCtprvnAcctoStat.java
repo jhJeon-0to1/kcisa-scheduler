@@ -13,6 +13,7 @@ import scheduler.kcisa.utils.CustomException;
 import scheduler.kcisa.utils.Utils;
 
 import javax.sql.DataSource;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.time.LocalDate;
@@ -23,18 +24,18 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Component
-public class PlbprfrViewngCtprvnAcctoStat extends QuartzJobBean {
+public class PblprfrViewngCtprvnAcctoStat extends QuartzJobBean {
     private final List<String> sidos = Arrays.asList("^11", "^28", "^41", "^30", "^36", "^44", "^43", "^51|^42", "^27", "^26", "^31", "^48", "^47", "^29", "^46", "^45", "^50");
     private final List<String> ctprvn = Arrays.asList("11", "28", "41", "30", "36", "44", "43", "51", "27", "26", "31", "48", "47", "29", "46", "45", "50");
     private final List<String> sido_names = Arrays.asList("서울시", "인천시", "경기도", "대전시", "세종시", "충청남도", "충청북도", "강원도", "대구시", "부산시", "울산시", "경상남도", "경상북도", "광주시", "전라남도", "전라북도", "제주도");
     DataSource dataSource;
     SchedulerLogService schedulerLogService;
     Connection conn;
-    String tableName = "PBLPRFR_VIEWNG_CTPRVN_ACCTO_STAT";
+    String tableName = "COLCT_PBLPRFR_VIEWNG_CTPRVN_ACCTO_STAT";
     WebClient webClient = WebClient.builder().baseUrl("https://www.kopis.or.kr").build();
     String url = "/por/stats/perfo/perfoStatsTotalList.json";
 
-    public PlbprfrViewngCtprvnAcctoStat(DataSource dataSource, SchedulerLogService schedulerLogService) {
+    public PblprfrViewngCtprvnAcctoStat(DataSource dataSource, SchedulerLogService schedulerLogService) {
         this.dataSource = dataSource;
         this.schedulerLogService = schedulerLogService;
     }
@@ -55,7 +56,7 @@ public class PlbprfrViewngCtprvnAcctoStat extends QuartzJobBean {
             schedulerLogService.create(new SchedulerLog(scheduleGroup, scheduleName, tableName, SchedulerStatus.STARTED));
 
             int count = 0;
-            String query = Utils.getSQLString("/sql/collection/pblprfr/PlbprfrViewngCtprvnAcctoStat.sql");
+            String query = Utils.getSQLString("src/main/resources/sql/collection/pblprfr/PblprfrViewngCtprvnAcctoStat.sql");
 
             PreparedStatement pstmt = conn.prepareStatement(query);
             for (int i = 0; i < sidos.size(); i++) {
@@ -88,11 +89,11 @@ public class PlbprfrViewngCtprvnAcctoStat extends QuartzJobBean {
                             pstmt.setString(6, sido_name);
                             pstmt.setString(7, row.get("genre_code").asText());
                             pstmt.setString(8, row.get("genre_code_nm").asText());
-                            pstmt.setBigDecimal(9, (row.get("data1").decimalValue()));  // 개막
-                            pstmt.setBigDecimal(10, (row.get("data3").decimalValue())); // 상영
-                            pstmt.setBigDecimal(11, (row.get("data5").decimalValue())); //매출액
-                            pstmt.setBigDecimal(12, (row.get("data7").decimalValue())); //관객수
-                            pstmt.setBigDecimal(13, (row.get("data16").decimalValue())); // 공연수
+                            pstmt.setBigDecimal(9, new BigDecimal(row.get("data1").asText()));  // 개막
+                            pstmt.setBigDecimal(10, new BigDecimal(row.get("data3").asText())); // 상영
+                            pstmt.setBigDecimal(11, new BigDecimal(row.get("data5").asText())); //매출액
+                            pstmt.setBigDecimal(12, new BigDecimal(row.get("data7").asText())); //관객수
+                            pstmt.setBigDecimal(13, new BigDecimal(row.get("data16").asText())); // 공연수
 
                             pstmt.addBatch();
                             count++;
