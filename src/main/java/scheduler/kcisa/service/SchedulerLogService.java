@@ -6,7 +6,7 @@ import scheduler.kcisa.model.collection.SchedulerLog;
 import scheduler.kcisa.repo.SchedulerLogRepository;
 
 @Service
-public class SchedulerLogService {
+public class SchedulerLogService implements LogService<SchedulerLog> {
     private final SchedulerLogRepository schedulerLogRepository;
 
     @Autowired

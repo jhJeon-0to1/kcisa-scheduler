@@ -3,7 +3,11 @@ package scheduler.kcisa.configuration.analysis;
 import org.quartz.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import scheduler.kcisa.job.analysis.movie.*;
+import scheduler.kcisa.job.analysis.movie.MovieActivateCrstatJob;
+import scheduler.kcisa.job.analysis.movie.MovieRlsCrstatJob;
+import scheduler.kcisa.job.analysis.movie.MovieViewngCrstatJob;
+import scheduler.kcisa.job.analysis.movie.monthly.MtAcctoMovieRlsCrstat;
+import scheduler.kcisa.job.analysis.movie.monthly.MtAcctoMovieViewngCrstatJob;
 
 import javax.annotation.PostConstruct;
 import java.util.TimeZone;

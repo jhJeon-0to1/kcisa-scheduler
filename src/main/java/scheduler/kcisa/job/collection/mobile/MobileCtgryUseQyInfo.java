@@ -47,8 +47,8 @@ public class MobileCtgryUseQyInfo extends QuartzJobBean {
         String groupName = context.getJobDetail().getKey().getGroup();
         String jobName = context.getJobDetail().getKey().getName();
 
-        LocalDate yesterday = LocalDate.now().minusDays(2);
-        String date = yesterday.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        LocalDate stdDate = LocalDate.now().minusDays(3);
+        String date = stdDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
         try {
             schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.STARTED));

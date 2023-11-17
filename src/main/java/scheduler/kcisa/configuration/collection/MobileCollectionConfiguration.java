@@ -20,10 +20,10 @@ public class MobileCollectionConfiguration {
     protected void start() throws SchedulerException {
         JobDetail mobileJobDetail = JobBuilder.newJob(MobileCtgryUseQyInfo.class)
                 .withIdentity("모바일 카테고리 이용량 정보 수집", "모바일 이용량")
-                // .usingJobData(mobileJobDataMap)
                 .build();
         Trigger mobileTrigger = TriggerBuilder.newTrigger().forJob(mobileJobDetail)
                 .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(10).withRepeatCount(0))
+//                .withSchedule(CronScheduleBuilder.cronSchedule(("0 0 2 * * ?"))) // 매일 새벽 2시에 실행
                 .build();
 //        scheduler.scheduleJob(mobileJobDetail, mobileTrigger);
     }

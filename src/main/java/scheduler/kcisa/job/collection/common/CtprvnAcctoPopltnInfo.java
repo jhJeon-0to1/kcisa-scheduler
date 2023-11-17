@@ -25,7 +25,6 @@ import java.util.Optional;
 
 @Component
 public class CtprvnAcctoPopltnInfo extends QuartzJobBean {
-    private final String tableName = "CTPRVN_ACCTO_POPLTN_INFO";
     private final DataSource dataSource;
     private final SchedulerLogService schedulerLogService;
     WebClient webClient = WebClient.builder().baseUrl("https://jumin.mois.go.kr/statMonth.do").build();
@@ -87,6 +86,7 @@ public class CtprvnAcctoPopltnInfo extends QuartzJobBean {
         String groupName = jobExecutionContext.getJobDetail().getKey().getGroup();
         String jobName = jobExecutionContext.getJobDetail().getKey().getName();
 
+        String tableName = "CTPRVN_ACCTO_POPLTN_INFO";
         try {
             int count = 0;
             final LocalDate endDate = LocalDate.now().minusMonths(1).withDayOfMonth(1);

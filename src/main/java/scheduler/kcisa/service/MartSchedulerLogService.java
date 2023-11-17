@@ -6,7 +6,7 @@ import scheduler.kcisa.model.mart.MartSchedulerLog;
 import scheduler.kcisa.repo.MartSchedulerLogRepository;
 
 @Service
-public class MartSchedulerLogService {
+public class MartSchedulerLogService implements LogService<MartSchedulerLog> {
     private final MartSchedulerLogRepository martSchedulerLogRepository;
 
     @Autowired

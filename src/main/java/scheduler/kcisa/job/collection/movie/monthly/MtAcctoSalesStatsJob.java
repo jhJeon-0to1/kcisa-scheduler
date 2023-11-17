@@ -1,4 +1,4 @@
-package scheduler.kcisa.job.collection.movie;
+package scheduler.kcisa.job.collection.movie.monthly;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;

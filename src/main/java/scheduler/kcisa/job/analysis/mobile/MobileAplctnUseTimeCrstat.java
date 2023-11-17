@@ -1,7 +1,5 @@
-package scheduler.kcisa.job.analysis.movie;
+package scheduler.kcisa.job.analysis.mobile;
 
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.stereotype.Component;
 import scheduler.kcisa.model.SchedulerStatus;
@@ -13,37 +11,34 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
 @Component
-public class MtAcctoMovieViewngCrstatJob extends QuartzJobBean {
+public class MobileAplctnUseTimeCrstat extends QuartzJobBean {
     DataSource dataSource;
     MartSchedulerLogService martSchedulerLogService;
-    String tableName = "MOVIE_MT_ACCTO_VIEWNG_CRSTAT";
+    String tableName = "MOBILE_APLCTN_USE_TIME_CRSTAT";
     Connection connection;
 
-    public MtAcctoMovieViewngCrstatJob(DataSource dataSource, MartSchedulerLogService martSchedulerLogService) {
+    public MobileAplctnUseTimeCrstat(DataSource dataSource, MartSchedulerLogService martSchedulerLogService) {
         this.dataSource = dataSource;
         this.martSchedulerLogService = martSchedulerLogService;
     }
 
     @Override
-    protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
-        String groupName = context.getJobDetail().getKey().getGroup();
-        String jobName = context.getJobDetail().getKey().getName();
+    protected void executeInternal(org.quartz.JobExecutionContext jobExecutionContext) throws org.quartz.JobExecutionException {
+        String groupName = jobExecutionContext.getJobDetail().getKey().getGroup();
+        String jobName = jobExecutionContext.getJobDetail().getKey().getName();
 
-        LocalDate stdDate = LocalDate.now().minusMonths(1);
-        String stdDateStr = stdDate.format(DateTimeFormatter.ofPattern("yyyyMM"));
+        LocalDate stdDate = LocalDate.now().minusDays(3);
+        String stdDateStr = stdDate.format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"));
+//        String stdDateStr = "20230930";
+
         try {
             connection = dataSource.getConnection();
 
-            Boolean isExist = Utils.checkAlreadyExist(tableName, stdDateStr, context);
+            martSchedulerLogService.create(new MartSchedulerLog(groupName, jobName, tableName, SchedulerStatus.STARTED));
 
-            if (isExist) {
-                return;
-            }
-
-            String query = Utils.getSQLString("src/main/resources/sql/analysis/movie/MtAcctoMovieViewngCrstat.sql");
+            String query = Utils.getSQLString("src/main/resources/sql/analysis/mobile/MobileAplctnUseTimeCrstat.sql");
 
             PreparedStatement pstmt = connection.prepareStatement(query);
             pstmt.setString(1, stdDateStr);

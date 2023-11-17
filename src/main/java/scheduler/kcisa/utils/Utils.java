@@ -64,8 +64,9 @@ public class Utils {
         try {
             System.out.println(tableName + " 테이블의 " + date + " 의 데이터를 분석합니다.");
 
-            Boolean isMonth = date.length() == 6;
-            String dateQuery = isMonth ? "BASE_YM" : "BASE_DE";
+            boolean isMonth = date.length() == 6;
+            boolean isYear = date.length() == 4;
+            String dateQuery = isYear ? "BASE_YEAR" : isMonth ? "BASE_YM" : "BASE_DE";
 
             String query = "SELECT COUNT(*) AS count FROM analysis_etl." + tableName + " WHERE " + dateQuery + "= ?";
             PreparedStatement countPstmt = connection.prepareStatement(query);

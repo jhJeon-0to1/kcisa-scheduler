@@ -28,6 +28,6 @@ public class CommonConfiguration {
                 // ?").inTimeZone(java.util.TimeZone.getTimeZone("Asia/Seoul")))
                 .build();
 
-        // scheduler.scheduleJob(CtprvnAcctoPopltnInfoJobDetail, CtprvnAcctoPopltnInfoTrigger);
+//        scheduler.scheduleJob(CtprvnAcctoPopltnInfoJobDetail, CtprvnAcctoPopltnInfoTrigger);
     }
 }

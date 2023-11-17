@@ -1,4 +1,4 @@
-package scheduler.kcisa.job.analysis.pblprfr;
+package scheduler.kcisa.job.analysis.pblprfr.activate;
 
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -16,14 +16,14 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 @Component
-public class PblprfrViewngCrstat extends QuartzJobBean {
+public class PblprfrMtAcctoGenreActtoRasngCutinCrstatJob extends QuartzJobBean {
     DataSource dataSource;
     MartSchedulerLogService martSchedulerLogService;
     Connection connection;
 
-    String tableName = "pblprfr_viewng_crstat".toUpperCase();
+    String tableName = "pblprfr_mt_actto_genre_accto_rasng_cutin_crstat".toUpperCase();
 
-    public PblprfrViewngCrstat(DataSource dataSource, MartSchedulerLogService martSchedulerLogService) {
+    public PblprfrMtAcctoGenreActtoRasngCutinCrstatJob(DataSource dataSource, MartSchedulerLogService martSchedulerLogService) {
         this.dataSource = dataSource;
         this.martSchedulerLogService = martSchedulerLogService;
     }
@@ -33,8 +33,8 @@ public class PblprfrViewngCrstat extends QuartzJobBean {
         String groupName = context.getJobDetail().getKey().getGroup();
         String jobName = context.getJobDetail().getKey().getName();
 
-        LocalDate stdDate = LocalDate.now().minusDays(2);
-        String stdDateStr = stdDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        LocalDate stdDate = LocalDate.now().minusMonths(1);
+        String stdDateStr = stdDate.format(DateTimeFormatter.ofPattern("yyyyMM"));
 
         try {
             connection = dataSource.getConnection();
@@ -45,7 +45,7 @@ public class PblprfrViewngCrstat extends QuartzJobBean {
                 return;
             }
 
-            String query = Utils.getSQLString("src/main/resources/sql/analysis/pblprfr/PblprfrViewngCrstat.sql");
+            String query = Utils.getSQLString("src/main/resources/sql/analysis/pblprfr/PblprfrMtAcctoGenreActtoRasngCutinCrstat.sql");
 
             PreparedStatement pstmt = connection.prepareStatement(query);
             pstmt.setString(1, stdDateStr);

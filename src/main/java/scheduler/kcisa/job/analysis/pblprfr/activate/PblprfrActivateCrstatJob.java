@@ -1,4 +1,4 @@
-package scheduler.kcisa.job.analysis.pblprfr;
+package scheduler.kcisa.job.analysis.pblprfr.activate;
 
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;

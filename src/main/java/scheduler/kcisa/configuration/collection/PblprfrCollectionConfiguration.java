@@ -3,10 +3,7 @@ package scheduler.kcisa.configuration.collection;
 import org.quartz.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import scheduler.kcisa.job.collection.pblprfr.PblprfrFcltyDetailInfo;
-import scheduler.kcisa.job.collection.pblprfr.PblprfrFcltyInfo;
-import scheduler.kcisa.job.collection.pblprfr.PblprfrViewngCtprvnAcctoStat;
-import scheduler.kcisa.job.collection.pblprfr.PblprfrViewngMtAcctoCtprvnAcctoStat;
+import scheduler.kcisa.job.collection.pblprfr.*;
 
 import javax.annotation.PostConstruct;
 
@@ -22,7 +19,7 @@ public class PblprfrCollectionConfiguration {
     @PostConstruct
     public void start() throws SchedulerException {
         JobDetail PlbprfrViewngCtprvnAcctoStatJobDetail = JobBuilder.newJob(PblprfrViewngCtprvnAcctoStat.class)
-                .withIdentity("공연 관람 지역별 통계 수집", "공연 관람").build();
+                .withIdentity("공연 관람 시도별 통계 수집", "공연 관람").build();
         Trigger PlbprfrViewngCtprvnAcctoStatTrigger = TriggerBuilder.newTrigger().forJob(PlbprfrViewngCtprvnAcctoStatJobDetail)
                 .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(60)
                         .withRepeatCount(0))
@@ -32,7 +29,7 @@ public class PblprfrCollectionConfiguration {
 //        scheduler.scheduleJob(PlbprfrViewngCtprvnAcctoStatJobDetail, PlbprfrViewngCtprvnAcctoStatTrigger);
 
         JobDetail PblprfrViewngMtAcctoCtprvnAcctoStatJobDetail = JobBuilder.newJob(PblprfrViewngMtAcctoCtprvnAcctoStat.class)
-                .withIdentity("공연 관람 월별 지역별 통계 수집", "공연 관람").build();
+                .withIdentity("공연 관람 월별 시도별 통계 수집", "공연 관람").build();
         Trigger PblprfrViewngMtAcctoCtprvnAcctoStatTrigger = TriggerBuilder.newTrigger().forJob(PblprfrViewngMtAcctoCtprvnAcctoStatJobDetail)
                 .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(60)
                         .withRepeatCount(0))
@@ -40,6 +37,16 @@ public class PblprfrCollectionConfiguration {
 //                        .inTimeZone(TimeZone.getTimeZone("Asia/Seoul"))) // 매월 2일 2시에 실행
                 .build();
 //        scheduler.scheduleJob(PblprfrViewngMtAcctoCtprvnAcctoStatJobDetail, PblprfrViewngMtAcctoCtprvnAcctoStatTrigger);
+
+        JobDetail PblprfrViewngYearAcctoCtprvnAcctoStatJobDetail = JobBuilder.newJob(PblprfrViewngYearAcctoCtprvnAcctoStat.class)
+                .withIdentity("공연 관람 연도별 시도별 통계 수집", "공연 관람").build();
+        Trigger PblprfrViewngYearAcctoCtprvnAcctoStatTrigger = TriggerBuilder.newTrigger().forJob(PblprfrViewngYearAcctoCtprvnAcctoStatJobDetail)
+                .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(60)
+                        .withRepeatCount(0))
+//                .withSchedule(CronScheduleBuilder.cronSchedule("0 0 2 10 1 ?")
+//                        .inTimeZone(TimeZone.getTimeZone("Asia/Seoul"))) // 매년 1월 10일 2시에 실행
+                .build();
+//        scheduler.scheduleJob(PblprfrViewngYearAcctoCtprvnAcctoStatJobDetail, PblprfrViewngYearAcctoCtprvnAcctoStatTrigger);
 
 
         JobDetail PblprfrFcltyInfoJobDetail = JobBuilder.newJob(PblprfrFcltyInfo.class)

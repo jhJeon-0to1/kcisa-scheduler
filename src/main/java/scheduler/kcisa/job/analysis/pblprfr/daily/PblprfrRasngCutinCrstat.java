@@ -1,4 +1,4 @@
-package scheduler.kcisa.job.analysis.pblprfr;
+package scheduler.kcisa.job.analysis.pblprfr.daily;
 
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -16,50 +16,49 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 @Component
-public class PblprfrFcltyCrstat extends QuartzJobBean {
+public class PblprfrRasngCutinCrstat extends QuartzJobBean {
     DataSource dataSource;
     MartSchedulerLogService martSchedulerLogService;
     Connection connection;
 
-    public PblprfrFcltyCrstat(DataSource dataSource, MartSchedulerLogService martSchedulerLogService) {
+    String tableName = "pblprfr_rasng_cutin_crstat".toUpperCase();
+
+    public PblprfrRasngCutinCrstat(DataSource dataSource, MartSchedulerLogService martSchedulerLogService) {
         this.dataSource = dataSource;
         this.martSchedulerLogService = martSchedulerLogService;
     }
 
     @Override
     protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
-        String tableName = "PBLPRFR_FCLTY_CRSTAT";
         String groupName = context.getJobDetail().getKey().getGroup();
         String jobName = context.getJobDetail().getKey().getName();
 
-        LocalDate now = LocalDate.now();
-        String ym = now.format(DateTimeFormatter.ofPattern("yyyyMM"));
-
-        LocalDate baseDate = LocalDate.now().withDayOfMonth(1).minusMonths(1);
-        String baseDateStr = baseDate.format(DateTimeFormatter.ofPattern("yyyyMM"));
+        LocalDate stdDate = LocalDate.now().minusDays(2);
+        String stdDateStr = stdDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
         try {
             connection = dataSource.getConnection();
 
-            Boolean isExist = Utils.checkAlreadyExist(tableName, ym, context);
+            Boolean isExist = Utils.checkAlreadyExist(tableName, stdDateStr, context);
 
             if (isExist) {
                 return;
             }
 
-            String query = Utils.getSQLString("src/main/resources/sql/analysis/pblprfr/PblbrfrFcltyCrstat.sql");
+            String query = Utils.getSQLString("src/main/resources/sql/analysis/pblprfr/PblprfrRasngCutinCrstat.sql");
 
             PreparedStatement pstmt = connection.prepareStatement(query);
-            pstmt.setString(1, baseDateStr);
-            pstmt.setString(2, ym);
+            pstmt.setString(1, stdDateStr);
+            pstmt.setString(2, stdDateStr);
 
             int count = pstmt.executeUpdate();
 
             martSchedulerLogService.create(new MartSchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS,
                     count));
         } catch (Exception e) {
-            martSchedulerLogService.create(
-                    new MartSchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, e.getMessage()));
+            e.printStackTrace();
+            martSchedulerLogService.create(new MartSchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, e.getMessage()));
         }
     }
+
 }
