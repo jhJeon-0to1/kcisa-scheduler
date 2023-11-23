@@ -5,60 +5,56 @@ import org.quartz.JobExecutionException;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.stereotype.Component;
 import scheduler.kcisa.model.SchedulerStatus;
+import scheduler.kcisa.model.flag.analysis.DailyAnalysisFlag;
 import scheduler.kcisa.model.mart.MartSchedulerLog;
 import scheduler.kcisa.service.MartSchedulerLogService;
+import scheduler.kcisa.service.flag.analysis.DailyAnalysisFlagService;
+import scheduler.kcisa.utils.JobUtils;
+import scheduler.kcisa.utils.ScheduleInterval;
 import scheduler.kcisa.utils.Utils;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Component
 public class PblprfrRasngCutinCrstat extends QuartzJobBean {
-    DataSource dataSource;
-    MartSchedulerLogService martSchedulerLogService;
-    Connection connection;
+    DailyAnalysisFlagService flagService;
+    String tableName = "pblprfr_rasng_cutin_crstat";
+    List<String> checkList = new ArrayList<>(Arrays.asList("colct_pblprfr_viewng_ctprvn_accto_stats"));
 
-    String tableName = "pblprfr_rasng_cutin_crstat".toUpperCase();
-
-    public PblprfrRasngCutinCrstat(DataSource dataSource, MartSchedulerLogService martSchedulerLogService) {
-        this.dataSource = dataSource;
-        this.martSchedulerLogService = martSchedulerLogService;
+    public PblprfrRasngCutinCrstat(DailyAnalysisFlagService flagService) {
+        this.flagService = flagService;
     }
 
     @Override
     protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
-        String groupName = context.getJobDetail().getKey().getGroup();
-        String jobName = context.getJobDetail().getKey().getName();
-
         LocalDate stdDate = LocalDate.now().minusDays(2);
         String stdDateStr = stdDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
-        try {
-            connection = dataSource.getConnection();
+        String flagDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
-            Boolean isExist = Utils.checkAlreadyExist(tableName, stdDateStr, context);
-
-            if (isExist) {
-                return;
-            }
+        JobUtils.executeAnalysisJob(context, tableName, checkList, flagDate, ScheduleInterval.DAILY, jobData -> {
+            Connection connection = jobData.conn;
+            MartSchedulerLogService martSchedulerLogService = (MartSchedulerLogService) jobData.logService;
 
             String query = Utils.getSQLString("src/main/resources/sql/analysis/pblprfr/PblprfrRasngCutinCrstat.sql");
 
-            PreparedStatement pstmt = connection.prepareStatement(query);
-            pstmt.setString(1, stdDateStr);
-            pstmt.setString(2, stdDateStr);
+            try (PreparedStatement pstmt = connection.prepareStatement(query);) {
+                pstmt.setString(1, stdDateStr);
+                pstmt.setString(2, stdDateStr);
 
-            int count = pstmt.executeUpdate();
+                int count = pstmt.executeUpdate();
 
-            martSchedulerLogService.create(new MartSchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS,
-                    count));
-        } catch (Exception e) {
-            e.printStackTrace();
-            martSchedulerLogService.create(new MartSchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, e.getMessage()));
-        }
+                martSchedulerLogService.create(new MartSchedulerLog(jobData.groupName, jobData.jobName, tableName, SchedulerStatus.SUCCESS, count));
+
+                flagService.create(new DailyAnalysisFlag(LocalDate.parse(flagDate), tableName, true));
+            }
+        });
     }
 
 }

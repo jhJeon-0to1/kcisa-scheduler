@@ -2,61 +2,55 @@ package scheduler.kcisa.job.analysis.sports;
 
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.stereotype.Component;
 import scheduler.kcisa.model.SchedulerStatus;
+import scheduler.kcisa.model.flag.analysis.DailyAnalysisFlag;
 import scheduler.kcisa.model.mart.MartSchedulerLog;
 import scheduler.kcisa.service.MartSchedulerLogService;
+import scheduler.kcisa.service.flag.analysis.DailyAnalysisFlagService;
+import scheduler.kcisa.utils.JobUtils;
+import scheduler.kcisa.utils.ScheduleInterval;
 import scheduler.kcisa.utils.Utils;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Component
 public class SportsMatchInfoJob extends QuartzJobBean {
-    DataSource dataSource;
-    MartSchedulerLogService martSchedulerLogService;
-    Connection connection;
-    String tableName = "SPORTS_MATCH_INFO";
+    List<String> checkList = new ArrayList<>(Arrays.asList("colct_sports_match_info"));
+    DailyAnalysisFlagService flagService;
+    String tableName = "SPORTS_MATCH_INFO".toLowerCase();
 
-    @Autowired
-    public SportsMatchInfoJob(DataSource dataSource, MartSchedulerLogService martSchedulerLogService) {
-        this.dataSource = dataSource;
-        this.martSchedulerLogService = martSchedulerLogService;
+    public SportsMatchInfoJob(DailyAnalysisFlagService flagService) {
+        this.flagService = flagService;
     }
 
     @Override
     protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
-
-        String groupName = context.getJobDetail().getKey().getGroup();
-        String jobName = context.getJobDetail().getKey().getName();
-
         LocalDate stdDate = LocalDate.now().minusDays(2);
         String stdDateStr = stdDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String flagDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
-        try {
-            connection = dataSource.getConnection();
-
-            martSchedulerLogService
-                    .create(new MartSchedulerLog(groupName, jobName, tableName, SchedulerStatus.STARTED));
-
+        JobUtils.executeAnalysisJob(context, tableName, checkList, flagDate, ScheduleInterval.DAILY, jobData -> {
+            Connection connection = jobData.conn;
+            MartSchedulerLogService logService = (MartSchedulerLogService) jobData.logService;
             String query = Utils.getSQLString("src/main/resources/sql/analysis/sports/SportsMatchInfo.sql");
 
-            PreparedStatement pstmt = connection.prepareStatement(query);
-            pstmt.setString(1, stdDateStr);
+            try (PreparedStatement pstmt = connection.prepareStatement(query);) {
+                pstmt.setString(1, stdDateStr);
 
-            int count = pstmt.executeUpdate();
+                int count = pstmt.executeUpdate();
 
-            martSchedulerLogService.create(
-                    new MartSchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count));
-        } catch (Exception e) {
-            e.printStackTrace();
-            martSchedulerLogService.create(
-                    new MartSchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, e.getMessage()));
-        }
+                logService.create(new MartSchedulerLog(jobData.groupName, jobData.jobName, tableName, SchedulerStatus.SUCCESS, count));
+
+                flagService.create(new DailyAnalysisFlag(LocalDate.now(), tableName, true));
+            }
+        });
     }
 }

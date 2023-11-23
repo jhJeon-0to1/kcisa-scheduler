@@ -10,31 +10,32 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import scheduler.kcisa.model.SchedulerStatus;
 import scheduler.kcisa.model.collection.SchedulerLog;
-import scheduler.kcisa.service.SchedulerLogService;
+import scheduler.kcisa.model.flag.collection.MonthlyCollectionFlag;
+import scheduler.kcisa.service.flag.collection.MonthlyCollectionFlagService;
+import scheduler.kcisa.utils.JobUtils;
 import scheduler.kcisa.utils.Utils;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 @Component
 public class PblprfrFcltyInfo extends QuartzJobBean {
-    DataSource dataSource;
-    SchedulerLogService schedulerLogService;
+    MonthlyCollectionFlagService flagService;
     @Value("${kopis.api.key}")
     String key;
     WebClient webClient = WebClient.builder().baseUrl("http://kopis.or.kr").build();
-    String tableName = "COLCT_PBLPRFR_FCLTY_INFO";
-    Connection connection;
+    String tableName = "colct_pblprfr_fclty_info";
     Map<String, String> regionMap = new HashMap<>();
 
     @Autowired
-    public PblprfrFcltyInfo(DataSource dataSource, SchedulerLogService schedulerLogService) {
-        this.dataSource = dataSource;
-        this.schedulerLogService = schedulerLogService;
+    public PblprfrFcltyInfo(
+            MonthlyCollectionFlagService flagService) {
+        this.flagService = flagService;
 
         regionMap.put("해외", "99");
         regionMap.put("서울", "11");
@@ -58,58 +59,58 @@ public class PblprfrFcltyInfo extends QuartzJobBean {
 
     @Override
     protected void executeInternal(JobExecutionContext context) {
-        String groupName = context.getJobDetail().getKey().getGroup();
-        String jobName = context.getJobDetail().getKey().getName();
-        int count = 0;
-        int cPage = 1;
+        final int[] count = {0};
+        final int[] cPage = {1};
 
         XmlMapper xmlMapper = new XmlMapper();
-        try {
-            connection = dataSource.getConnection();
-            schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.STARTED));
 
-            String insertQuery = "INSERT INTO COLCT_PBLPRFR_FCLTY_INFO (PBLPRFR_FCLTY_ID,PBLPRFR_FCLTY_NM,PRFPLC_CO,FCLTY_CHARTR,CTPRVN_CD,CTPRVN_NM,SIGNGU_NM,OPNNG_YEAR,COLCT_YM) VALUES (?,?,?,?,?,(SELECT CTPRVN_NM FROM CTPRVN_INFO AS C WHERE C.CTPRVN_CD = ?),?,?,DATE_FORMAT(NOW(), '%Y%m')) ON DUPLICATE KEY UPDATE PBLPRFR_FCLTY_NM=VALUES(PBLPRFR_FCLTY_NM),PRFPLC_CO=VALUES(PRFPLC_CO),FCLTY_CHARTR=VALUES(FCLTY_CHARTR),CTPRVN_NM=VALUES(CTPRVN_NM),SIGNGU_NM=VALUES(SIGNGU_NM),OPNNG_YEAR=VALUES(OPNNG_YEAR),UPDT_YM=DATE_FORMAT(NOW(), '%Y%m')";
-            PreparedStatement pstmt = connection.prepareStatement(insertQuery);
+        JobUtils.executeJob(context, tableName, jobData -> {
+            Connection connection = jobData.conn;
+            String groupName = jobData.groupName;
+            String jobName = jobData.jobName;
 
-            while (true) {
-                int finalCPage = cPage;
-                String url = "/openApi/restful/prfplc?service=" + key + "&cpage=" + finalCPage + "&rows=100";
-                String response = webClient.get().uri(url).retrieve().bodyToMono(String.class).block();
+            String insertQuery = "INSERT INTO colct_pblprfr_fclty_info (PBLPRFR_FCLTY_ID,PBLPRFR_FCLTY_NM,PRFPLC_CO,FCLTY_CHARTR,CTPRVN_CD,CTPRVN_NM,SIGNGU_NM,OPNNG_YEAR,COLCT_YM) VALUES (?,?,?,?,?,(SELECT CTPRVN_NM FROM ctprvn_info AS C WHERE C.CTPRVN_CD = ?),?,?,DATE_FORMAT(NOW(), '%Y%m')) ON DUPLICATE KEY UPDATE PBLPRFR_FCLTY_NM=VALUES(PBLPRFR_FCLTY_NM),PRFPLC_CO=VALUES(PRFPLC_CO),FCLTY_CHARTR=VALUES(FCLTY_CHARTR),CTPRVN_NM=VALUES(CTPRVN_NM),SIGNGU_NM=VALUES(SIGNGU_NM),OPNNG_YEAR=VALUES(OPNNG_YEAR),UPDT_YM=DATE_FORMAT(NOW(), '%Y%m')";
 
-                JsonNode responseJson = xmlMapper.readValue(response, JsonNode.class);
+            try (PreparedStatement pstmt = connection.prepareStatement(insertQuery);) {
+                while (true) {
+                    int finalCPage = cPage[0];
+                    String url = "/openApi/restful/prfplc?service=" + key + "&cpage=" + finalCPage + "&rows=100";
+                    String response = webClient.get().uri(url).retrieve().bodyToMono(String.class).block();
 
-                if (responseJson.has("db")) {
-                    for (JsonNode node : responseJson.get("db")) {
-                        pstmt.setString(1, node.get("mt10id").asText());
-                        pstmt.setString(2, node.get("fcltynm").asText());
-                        pstmt.setString(3, node.get("mt13cnt").asText());
-                        pstmt.setString(4, node.get("fcltychartr").asText());
-                        pstmt.setString(5, regionMap.get(node.get("sidonm").asText()));
-                        pstmt.setString(6, regionMap.get(node.get("sidonm").asText()));
-                        pstmt.setString(7, node.get("gugunnm").asText());
-                        pstmt.setString(8, node.get("opende").asText());
+                    JsonNode responseJson = xmlMapper.readValue(response, JsonNode.class);
 
-                        pstmt.addBatch();
-                        count++;
+                    if (responseJson.has("db")) {
+                        for (JsonNode node : responseJson.get("db")) {
+                            pstmt.setString(1, node.get("mt10id").asText());
+                            pstmt.setString(2, node.get("fcltynm").asText());
+                            pstmt.setString(3, node.get("mt13cnt").asText());
+                            pstmt.setString(4, node.get("fcltychartr").asText());
+                            pstmt.setString(5, regionMap.get(node.get("sidonm").asText()));
+                            pstmt.setString(6, regionMap.get(node.get("sidonm").asText()));
+                            pstmt.setString(7, node.get("gugunnm").asText());
+                            pstmt.setString(8, node.get("opende").asText());
+
+                            pstmt.addBatch();
+                            count[0]++;
+                        }
+                        cPage[0]++;
+                    } else {
+                        break;
                     }
-                    cPage++;
-                } else {
-                    break;
                 }
-            }
-            pstmt.executeBatch();
+                pstmt.executeBatch();
 
-            Optional<Integer> updtCount = Utils.getUpdtCount(tableName);
-            if (!updtCount.isPresent()) {
-                throw new Exception("getUpdtCount error");
-            }
+                Optional<Integer> updtCount = Utils.getUpdtCount(tableName);
+                if (!updtCount.isPresent()) {
+                    throw new Exception("getUpdtCount error");
+                }
 
-            schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count,
-                    count - updtCount.get(), updtCount.get()));
-        } catch (Exception e) {
-            e.printStackTrace();
-            schedulerLogService
-                    .create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, e.getMessage()));
-        }
+                jobData.logService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count[0], count[0] - updtCount.get(), updtCount.get()));
+
+                String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
+                flagService.create(new MonthlyCollectionFlag(date, tableName, true));
+            }
+        });
+
     }
 }

@@ -7,6 +7,7 @@ import scheduler.kcisa.job.collection.sports.MatchInfoJob;
 import scheduler.kcisa.job.collection.sports.ViewingInfoJob;
 
 import javax.annotation.PostConstruct;
+import java.util.TimeZone;
 
 @Configuration
 public class SportsCollectionConfiguration {
@@ -17,8 +18,7 @@ public class SportsCollectionConfiguration {
         this.scheduler = scheduler;
     }
 
-    @PostConstruct
-    protected void start() throws SchedulerException {
+    public void jobRun() throws SchedulerException {
         JobDetail sportsRegionJobDetail = JobBuilder.newJob(ViewingInfoJob.class)
                 .withIdentity("스포츠 관람 정보 수집", "스포츠 관람").build();
         JobDetail sportsDailyJobDetail = JobBuilder.newJob(MatchInfoJob.class)
@@ -26,25 +26,22 @@ public class SportsCollectionConfiguration {
                 .build();
 
         Trigger sportsRegionTrigger = TriggerBuilder.newTrigger().forJob(sportsRegionJobDetail)
-                .withSchedule(
-                        SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(60)
-                                .withRepeatCount(0)
-                        // 매일 새벽 2시에 실행
-                        // CronScheduleBuilder.cronSchedule("0 0 2 * * ?")
-                        // .inTimeZone(TimeZone.getTimeZone("Asia/Seoul"))
-                )
+//                .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(60).withRepeatCount(0))
+                // 매일 새벽 2시에 실행
+                .withSchedule(CronScheduleBuilder.cronSchedule("0 0 2 * * ?").inTimeZone(TimeZone.getTimeZone("Asia/Seoul")))
                 .build();
         Trigger sportsDailyTrigger = TriggerBuilder.newTrigger().forJob(sportsDailyJobDetail)
-                .withSchedule(
-                        SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(60)
-                                .withRepeatCount(0)
-                        // 매일 새벽 2시에 실행
-                        // CronScheduleBuilder.cronSchedule("0 0 2 * * ?")
-                        // .inTimeZone(TimeZone.getTimeZone("Asia/Seoul"))
-                )
+//                .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(60).withRepeatCount(0))
+                // 매일 새벽 2시에 실행
+                .withSchedule(CronScheduleBuilder.cronSchedule("0 0 2 * * ?").inTimeZone(TimeZone.getTimeZone("Asia/Seoul")))
                 .build();
 
-        // scheduler.scheduleJob(sportsRegionJobDetail, sportsRegionTrigger);
-        // scheduler.scheduleJob(sportsDailyJobDetail, sportsDailyTrigger);
+        scheduler.scheduleJob(sportsRegionJobDetail, sportsRegionTrigger);
+        scheduler.scheduleJob(sportsDailyJobDetail, sportsDailyTrigger);
+    }
+
+    @PostConstruct
+    protected void start() throws SchedulerException {
+        jobRun();
     }
 }

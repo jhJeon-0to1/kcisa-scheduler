@@ -1,0 +1,23 @@
+INSERT INTO analysis_etl.colct_mobile_ctgry_use_qy_info (COLCT_ID,
+                                                         BASE_DE,
+                                                         BASE_YEAR,
+                                                         BASE_MT,
+                                                         BASE_DAY,
+                                                         UPPER_CTGRY_NM,
+                                                         LWPRT_CTGRY_NM,
+                                                         ALL_EMPR_CO,
+                                                         AOS_EMPR_CO,
+                                                         IOS_EMPR_CO,
+                                                         ALL_USE_TIME,
+                                                         AOS_USE_TIME,
+                                                         IOS_USE_TIME,
+                                                         COLCT_DE)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+        DATE_FORMAT(NOW(), '%Y%m%d'))
+ON DUPLICATE KEY UPDATE ALL_EMPR_CO  = VALUES(ALL_EMPR_CO),
+                        AOS_EMPR_CO  = VALUES(AOS_EMPR_CO),
+                        IOS_EMPR_CO  = VALUES(IOS_EMPR_CO),
+                        ALL_USE_TIME = VALUES(ALL_USE_TIME),
+                        AOS_USE_TIME = VALUES(AOS_USE_TIME),
+                        IOS_USE_TIME = VALUES(IOS_USE_TIME),
+                        UPDT_DE      = DATE_FORMAT(NOW(), '%Y%m%d')

@@ -11,36 +11,34 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import scheduler.kcisa.model.SchedulerStatus;
 import scheduler.kcisa.model.collection.SchedulerLog;
+import scheduler.kcisa.model.flag.collection.DailyCollectionFlag;
 import scheduler.kcisa.service.SchedulerLogService;
+import scheduler.kcisa.service.flag.collection.DailyCollectionFlagService;
 import scheduler.kcisa.utils.CustomException;
+import scheduler.kcisa.utils.JobUtils;
 import scheduler.kcisa.utils.Utils;
 
-import javax.sql.DataSource;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
 public class ViewingInfoJob extends QuartzJobBean {
-    DataSource dataSource;
-    SchedulerLogService schedulerLogService;
+    DailyCollectionFlagService flagService;
     String url = "http://data.prosports.or.kr/spectator/m0204/ajax/searchall";
     List<Code> codeList = new ArrayList<>();
-    String tableName = "COLCT_SPORTS_VIEWNG_INFO";
+    String tableName = "colct_sports_viewng_info";
     WebClient webClient = WebClient.builder().baseUrl("http://data.prosports.or.kr").build();
-    Connection connection;
 
     @Autowired
-    public ViewingInfoJob(DataSource dataSource, SchedulerLogService schedulerLogService) throws SQLException {
-        this.dataSource = dataSource;
-        this.schedulerLogService = schedulerLogService;
-        connection = dataSource.getConnection();
+    public ViewingInfoJob(DailyCollectionFlagService flagService) {
+        this.flagService = flagService;
 
         codeList.add(new Code("LOC01", "서울", "11"));
         codeList.add(new Code("LOC02", "부산", "26"));
@@ -62,93 +60,89 @@ public class ViewingInfoJob extends QuartzJobBean {
 
     @Override
     protected void executeInternal(org.quartz.JobExecutionContext context) {
-        int count = 0;
-        String groupName = context.getJobDetail().getKey().getGroup();
-        String jobName = context.getJobDetail().getKey().getName();
+        LocalDate stdDate = LocalDate.now().minusDays(2);
+        String date = stdDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String year = stdDate.format(DateTimeFormatter.ofPattern("yyyy"));
+        String month = stdDate.format(DateTimeFormatter.ofPattern("MM"));
+        String day = stdDate.format(DateTimeFormatter.ofPattern("dd"));
 
-        schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.STARTED));
+        AtomicInteger count = new AtomicInteger();
 
-        try {
-            LocalDate stdDate = LocalDate.now().minusDays(2);
-            String date = stdDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-            String year = stdDate.format(DateTimeFormatter.ofPattern("yyyy"));
-            String month = stdDate.format(DateTimeFormatter.ofPattern("MM"));
-            String day = stdDate.format(DateTimeFormatter.ofPattern("dd"));
+        JobUtils.executeJob(context, tableName, jobData -> {
+            Connection connection = jobData.conn;
+            String groupName = jobData.groupName;
+            String jobName = jobData.jobName;
+            SchedulerLogService schedulerLogService = (SchedulerLogService) jobData.logService;
 
-            String inputQuery = "INSERT analysis_etl.COLCT_SPORTS_VIEWNG_INFO (BASE_DE, BASE_YEAR, BASE_MT, BASE_DAY, CTPRVN_CD, CTPRVN_NM, KLEA_VIEWNG_NMPR_CO, KBO_VIEWNG_NMPR_CO, KBL_VIEWNG_NMPR_CO, WKBL_VIEWNG_NMPR_CO, KOVO_VIEWNG_NMPR_CO, SPORTS_VIEWNG_NMPR_CO, KLEA_MATCH_CO, KBO_MATCH_CO, KBL_MATCH_CO, WKBL_MATCH_CO, KOVO_MATCH_CO, SPORTS_MATCH_CO, COLCT_DE) VALUE (?, ?, ?, ?, ?, (SELECT CTPRVN_NM FROM CTPRVN_INFO AS C WHERE C.CTPRVN_CD = ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DATE_FORMAT(NOW(), '%Y%m%d')) ON DUPLICATE KEY UPDATE BASE_DE = VALUES(BASE_DE) , BASE_YEAR = VALUES(BASE_YEAR) , BASE_MT = VALUES(BASE_MT) , BASE_DAY = VALUES(BASE_DAY) , CTPRVN_CD = VALUES(CTPRVN_CD) , KLEA_VIEWNG_NMPR_CO = VALUES(KLEA_VIEWNG_NMPR_CO) , KBO_VIEWNG_NMPR_CO = VALUES(KBO_VIEWNG_NMPR_CO) , KBL_VIEWNG_NMPR_CO = VALUES(KBL_VIEWNG_NMPR_CO) , WKBL_VIEWNG_NMPR_CO = VALUES(WKBL_VIEWNG_NMPR_CO) , KOVO_VIEWNG_NMPR_CO = VALUES(KOVO_VIEWNG_NMPR_CO) , SPORTS_VIEWNG_NMPR_CO = VALUES(SPORTS_VIEWNG_NMPR_CO) , KLEA_MATCH_CO = VALUES(KLEA_MATCH_CO) , KBO_MATCH_CO = VALUES(KBO_MATCH_CO) , KBL_MATCH_CO = VALUES(KBL_MATCH_CO) , WKBL_MATCH_CO = VALUES(WKBL_MATCH_CO) , KOVO_MATCH_CO = VALUES(KOVO_MATCH_CO) , SPORTS_MATCH_CO = VALUES(SPORTS_MATCH_CO), UPDT_DE = DATE_FORMAT(NOW(), '%Y%m%d')";
+            String inputQuery = Utils.getSQLString("src/main/resources/sql/collection/sports/ViewngInfoJob.sql");
 
-            PreparedStatement pstmt = connection.prepareStatement(inputQuery);
+            try (PreparedStatement pstmt = connection.prepareStatement(inputQuery);) {
+                for (Code code : codeList) {
+                    String regionCode = code.region;
 
-            for (Code code : codeList) {
-                String regionCode = code.region;
+                    String codeId = code.code;
 
-                String codeId = code.code;
+                    JsonNodeFactory nodeFactory = new JsonNodeFactory(false);
+                    ObjectNode bodyData = new ObjectNode(nodeFactory);
+                    bodyData.set("agency", new TextNode("ALL"));
+                    bodyData.set("club", new TextNode("ALL"));
+                    bodyData.set("club_type", new TextNode("ALL"));
+                    bodyData.set("game_year", new TextNode(year));
+                    bodyData.set("game_month", new TextNode(month));
+                    bodyData.set("game_week", new TextNode("ALL"));
+                    bodyData.set("game_day", new TextNode(day));
+                    bodyData.set("league", new TextNode("ALL"));
+                    bodyData.set("local_code", new TextNode(codeId));
+                    bodyData.set("season", new TextNode("ALL"));
+                    bodyData.set("stadium", new TextNode("ALL"));
+                    bodyData.set("pageSize", new TextNode("30"));
+                    bodyData.set("startRow", new TextNode("-30"));
 
-                JsonNodeFactory nodeFactory = new JsonNodeFactory(false);
-                ObjectNode bodyData = new ObjectNode(nodeFactory);
-                bodyData.set("agency", new TextNode("ALL"));
-                bodyData.set("club", new TextNode("ALL"));
-                bodyData.set("club_type", new TextNode("ALL"));
-                bodyData.set("game_year", new TextNode(year));
-                bodyData.set("game_month", new TextNode(month));
-                bodyData.set("game_week", new TextNode("ALL"));
-                bodyData.set("game_day", new TextNode(day));
-                bodyData.set("league", new TextNode("ALL"));
-                bodyData.set("local_code", new TextNode(codeId));
-                bodyData.set("season", new TextNode("ALL"));
-                bodyData.set("stadium", new TextNode("ALL"));
-                bodyData.set("pageSize", new TextNode("30"));
-                bodyData.set("startRow", new TextNode("-30"));
+                    JsonNode response = webClient.post().uri(url).contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(bodyData).retrieve().bodyToMono(JsonNode.class).block();
 
-                JsonNode response = webClient.post().uri(url).contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(bodyData).retrieve().bodyToMono(JsonNode.class).block();
+                    if (response == null) {
+                        schedulerLogService.create(
+                                new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, "해당일자 데이터가 없습니다."));
+                        return;
+                    }
 
-                if (response == null) {
-                    schedulerLogService.create(
-                            new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, "해당일자 데이터가 없습니다."));
-                    return;
+                    pstmt.setString(1, date);
+                    pstmt.setString(2, year);
+                    pstmt.setString(3, month);
+                    pstmt.setString(4, day);
+                    pstmt.setString(5, regionCode);
+                    pstmt.setString(6, regionCode);
+                    pstmt.setBigDecimal(7, new BigDecimal(response.get("total1").asText()));
+                    pstmt.setBigDecimal(8, new BigDecimal(response.get("total2").asText()));
+                    pstmt.setBigDecimal(9, new BigDecimal(response.get("total3").asText()));
+                    pstmt.setBigDecimal(10, new BigDecimal(response.get("total4").asText()));
+                    pstmt.setBigDecimal(11, new BigDecimal(response.get("total5").asText()));
+                    pstmt.setBigDecimal(12, new BigDecimal(response.get("total6").asText()));
+                    pstmt.setBigDecimal(13, new BigDecimal(response.get("gamecnt1").asText()));
+                    pstmt.setBigDecimal(14, new BigDecimal(response.get("gamecnt2").asText()));
+                    pstmt.setBigDecimal(15, new BigDecimal(response.get("gamecnt3").asText()));
+                    pstmt.setBigDecimal(16, new BigDecimal(response.get("gamecnt4").asText()));
+                    pstmt.setBigDecimal(17, new BigDecimal(response.get("gamecnt5").asText()));
+                    pstmt.setBigDecimal(18, new BigDecimal(response.get("gamecnt6").asText()));
+
+                    count.getAndIncrement();
+                    pstmt.addBatch();
                 }
 
-                pstmt.setString(1, date);
-                pstmt.setString(2, year);
-                pstmt.setString(3, month);
-                pstmt.setString(4, day);
-                pstmt.setString(5, regionCode);
-                pstmt.setString(6, regionCode);
-                pstmt.setBigDecimal(7, new BigDecimal(response.get("total1").asText()));
-                pstmt.setBigDecimal(8, new BigDecimal(response.get("total2").asText()));
-                pstmt.setBigDecimal(9, new BigDecimal(response.get("total3").asText()));
-                pstmt.setBigDecimal(10, new BigDecimal(response.get("total4").asText()));
-                pstmt.setBigDecimal(11, new BigDecimal(response.get("total5").asText()));
-                pstmt.setBigDecimal(12, new BigDecimal(response.get("total6").asText()));
-                pstmt.setBigDecimal(13, new BigDecimal(response.get("gamecnt1").asText()));
-                pstmt.setBigDecimal(14, new BigDecimal(response.get("gamecnt2").asText()));
-                pstmt.setBigDecimal(15, new BigDecimal(response.get("gamecnt3").asText()));
-                pstmt.setBigDecimal(16, new BigDecimal(response.get("gamecnt4").asText()));
-                pstmt.setBigDecimal(17, new BigDecimal(response.get("gamecnt5").asText()));
-                pstmt.setBigDecimal(18, new BigDecimal(response.get("gamecnt6").asText()));
+                pstmt.executeBatch();
 
-                count++;
-                pstmt.addBatch();
+                System.out.println("스포츠 지역별 관중 수집 완료");
+
+                Optional<Integer> updt_count = Utils.getUpdtCount(tableName);
+                if (!updt_count.isPresent()) {
+                    throw new CustomException("002", "updt_count error");
+                }
+                schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count.get(), count.get() - updt_count.get(), updt_count.get()));
+
+                flagService.create(new DailyCollectionFlag(LocalDate.now(), tableName, true));
             }
-
-            pstmt.executeBatch();
-
-            System.out.println("스포츠 지역별 관중 수집 완료");
-
-            Optional<Integer> updt_count = Utils.getUpdtCount(tableName);
-            if (!updt_count.isPresent()) {
-                throw new CustomException("002", "updt_count error");
-            }
-            schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count,
-                    count - updt_count.get(), updt_count.get()));
-
-        } catch (Exception e) {
-            System.out.println("스포츠 지역별 관중 수집 실패");
-            e.printStackTrace();
-            schedulerLogService
-                    .create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, e.getMessage()));
-        }
+        });
     }
 
     private static class Code {

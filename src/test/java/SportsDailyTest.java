@@ -47,6 +47,9 @@ public class SportsDailyTest {
 
                 ArrayNode response = webClient.post().uri(url).contentType(MediaType.APPLICATION_JSON).bodyValue(bodyData).retrieve().bodyToMono(ArrayNode.class).block();
 
+                System.out.println("일별 경기 수집 결과");
+                System.out.println(response);
+
                 if (Objects.requireNonNull(response).isEmpty()) {
                     break;
                 }

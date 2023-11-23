@@ -11,7 +11,9 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import scheduler.kcisa.model.SchedulerStatus;
 import scheduler.kcisa.model.collection.SchedulerLog;
+import scheduler.kcisa.model.flag.collection.MonthlyCollectionFlag;
 import scheduler.kcisa.service.SchedulerLogService;
+import scheduler.kcisa.service.flag.collection.MonthlyCollectionFlagService;
 import scheduler.kcisa.utils.Utils;
 
 import javax.sql.DataSource;
@@ -27,13 +29,15 @@ import java.util.Optional;
 public class CtprvnAcctoPopltnInfo extends QuartzJobBean {
     private final DataSource dataSource;
     private final SchedulerLogService schedulerLogService;
+    private final MonthlyCollectionFlagService flagService;
     WebClient webClient = WebClient.builder().baseUrl("https://jumin.mois.go.kr/statMonth.do").build();
     String url = "https://jumin.mois.go.kr/statMonth.do";
 
     @Autowired
-    public CtprvnAcctoPopltnInfo(DataSource dataSource, SchedulerLogService schedulerLogService) {
+    public CtprvnAcctoPopltnInfo(DataSource dataSource, SchedulerLogService schedulerLogService, MonthlyCollectionFlagService monthlyCollectionFlagService) {
         this.dataSource = dataSource;
         this.schedulerLogService = schedulerLogService;
+        this.flagService = monthlyCollectionFlagService;
     }
 
     private static String getCode(String name) {
@@ -86,77 +90,77 @@ public class CtprvnAcctoPopltnInfo extends QuartzJobBean {
         String groupName = jobExecutionContext.getJobDetail().getKey().getGroup();
         String jobName = jobExecutionContext.getJobDetail().getKey().getName();
 
-        String tableName = "CTPRVN_ACCTO_POPLTN_INFO";
-        try {
+        String tableName = "ctprvn_accto_popltn_info";
+        try (Connection connection = dataSource.getConnection()) {
             int count = 0;
             final LocalDate endDate = LocalDate.now().minusMonths(1).withDayOfMonth(1);
             final LocalDate startDate = endDate.minusMonths(1).withDayOfMonth(1);
 
             schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.STARTED));
 
-            Connection connection = dataSource.getConnection();
+            String insertQuery = "INSERT INTO analysis_etl.ctprvn_accto_popltn_info (BASE_YM, BASE_YEAR, BASE_MT, CTPRVN_CD, CTPRVN_NM, POPLTN_CO, COLCT_DE) VALUES (?, ?, ?, ?, (SELECT C.CTPRVN_NM FROM ctprvn_info AS C WHERE C.CTPRVN_CD = ?), ?, DATE_FORMAT(NOW(), '%Y%m%d')) ON DUPLICATE KEY UPDATE popltn_co = VALUES(popltn_co), UPDT_DE = DATE_FORMAT(NOW(), '%Y%m%d')";
 
-            String insertQuery = "INSERT INTO analysis_etl.CTPRVN_ACCTO_POPLTN_INFO (BASE_YM, BASE_YEAR, BASE_MT, CTPRVN_CD, CTPRVN_NM, POPLTN_CO, COLCT_DE) VALUES (?, ?, ?, ?, (SELECT C.CTPRVN_NM FROM CTPRVN_INFO AS C WHERE C.CTPRVN_CD = ?), ?, DATE_FORMAT(NOW(), '%Y%m%d')) ON DUPLICATE KEY UPDATE popltn_co = VALUES(popltn_co), UPDT_DE = DATE_FORMAT(NOW(), '%Y%m%d')";
+            try (PreparedStatement pstmt = connection.prepareStatement(insertQuery);) {
+                for (LocalDate date = startDate; date.isBefore(endDate.plusMonths(1)); date = date.plusMonths(1)) {
+                    String year = date.format(DateTimeFormatter.ofPattern("yyyy"));
+                    String month = date.format(DateTimeFormatter.ofPattern("MM"));
 
-            PreparedStatement pstmt = connection.prepareStatement(insertQuery);
+                    String formData = "searchYearMonth=month&searchYearStart=" + year + "&searchMonthStart=" + month
+                            + "&searchYearEnd=" + year + "&searchMonthEnd=" + month
+                            + "&sltOrgType=1&sltOrgLvl1=A&sltOrgLvl2=A&generation=generation";
+                    String htmlResponse = webClient.post().uri(url).body(BodyInserters.fromValue(formData))
+                            .header("Content-Type", "application/x-www-form-urlencoded").retrieve().bodyToMono(String.class)
+                            .block();
 
-            for (LocalDate date = startDate; date.isBefore(endDate.plusMonths(1)); date = date.plusMonths(1)) {
-                String year = date.format(DateTimeFormatter.ofPattern("yyyy"));
-                String month = date.format(DateTimeFormatter.ofPattern("MM"));
-
-                String formData = "searchYearMonth=month&searchYearStart=" + year + "&searchMonthStart=" + month
-                        + "&searchYearEnd=" + year + "&searchMonthEnd=" + month
-                        + "&sltOrgType=1&sltOrgLvl1=A&sltOrgLvl2=A&generation=generation";
-                String htmlResponse = webClient.post().uri(url).body(BodyInserters.fromValue(formData))
-                        .header("Content-Type", "application/x-www-form-urlencoded").retrieve().bodyToMono(String.class)
-                        .block();
-
-                if (htmlResponse == null) {
-                    System.out.println(year + month + "htmlResponse is null");
-                    continue;
-                }
-
-                Document doc = Jsoup.parse(htmlResponse);
-                Element tbody = doc.selectFirst("div.section3 tbody");
-                if (tbody == null) {
-                    System.out.println(year + month + "tbody is null");
-                    continue;
-                }
-                List<Element> rows = tbody.select("tr");
-
-                for (Element row : rows) {
-                    List<Element> cells = row.select("td");
-                    String name = cells.get(1).text();
-                    String code = getCode(name);
-                    if (code == null) {
-                        System.out.println(name + "code is null");
+                    if (htmlResponse == null) {
+                        System.out.println(year + month + "htmlResponse is null");
                         continue;
                     }
-                    String population = cells.get(2).text().replace(",", "");
 
-                    pstmt.setString(1, year + month);
-                    pstmt.setString(2, year);
-                    pstmt.setString(3, month);
-                    pstmt.setString(4, code);
-                    pstmt.setString(5, code);
-                    pstmt.setBigDecimal(6, new BigDecimal(population));
+                    Document doc = Jsoup.parse(htmlResponse);
+                    Element tbody = doc.selectFirst("div.section3 tbody");
+                    if (tbody == null) {
+                        System.out.println(year + month + "tbody is null");
+                        continue;
+                    }
+                    List<Element> rows = tbody.select("tr");
 
-                    pstmt.addBatch();
-                    count++;
+                    for (Element row : rows) {
+                        List<Element> cells = row.select("td");
+                        String name = cells.get(1).text();
+                        String code = getCode(name);
+                        if (code == null) {
+                            System.out.println(name + "code is null");
+                            continue;
+                        }
+                        String population = cells.get(2).text().replace(",", "");
+
+                        pstmt.setString(1, year + month);
+                        pstmt.setString(2, year);
+                        pstmt.setString(3, month);
+                        pstmt.setString(4, code);
+                        pstmt.setString(5, code);
+                        pstmt.setBigDecimal(6, new BigDecimal(population));
+
+                        pstmt.addBatch();
+                        count++;
+                    }
                 }
+
+                pstmt.executeBatch();
+
+                Optional<Integer> updt_cnt = Utils.getUpdtCount(tableName);
+                if (!updt_cnt.isPresent()) {
+                    throw new Exception("updt_cnt is empty");
+                }
+                schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count,
+                        count - updt_cnt.get(), updt_cnt.get()));
+
+                String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
+                flagService.create(new MonthlyCollectionFlag(date, tableName, true));
+
+                System.out.println(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + " 시도 인구 추가 완료");
             }
-
-            pstmt.executeBatch();
-            connection.close();
-
-            Optional<Integer> updt_cnt = Utils.getUpdtCount(tableName);
-            if (!updt_cnt.isPresent()) {
-                throw new Exception("updt_cnt is empty");
-            }
-            schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count,
-                    count - updt_cnt.get(), updt_cnt.get()));
-
-            System.out.println(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + " 시도 인구 추가 완료");
         } catch (Exception e) {
             schedulerLogService
                     .create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, e.getMessage()));

@@ -11,6 +11,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import scheduler.kcisa.model.SchedulerStatus;
 import scheduler.kcisa.model.collection.SchedulerLog;
+import scheduler.kcisa.model.flag.collection.YearlyCollectionFlag;
+import scheduler.kcisa.service.SchedulerLogService;
+import scheduler.kcisa.service.flag.collection.YearlyCollectionFlagService;
 import scheduler.kcisa.utils.JobUtils;
 import scheduler.kcisa.utils.Utils;
 
@@ -26,11 +29,14 @@ import java.util.Optional;
 
 @Component
 public class YearAcctoCtprvnAcctoStatsJob extends QuartzJobBean {
-    String tableName = "colct_movie_year_accto_ctprvn_accto_stats".toUpperCase();
+    String tableName = "colct_movie_year_accto_ctprvn_accto_stats";
     List<Region> regionList = new ArrayList<>();
     WebClient webClient = WebClient.builder().baseUrl("https://www.kobis.or.kr").build();
+    YearlyCollectionFlagService flagService;
 
-    public YearAcctoCtprvnAcctoStatsJob() {
+    public YearAcctoCtprvnAcctoStatsJob(YearlyCollectionFlagService flagService) {
+        this.flagService = flagService;
+
         regionList.add(new Region("11", "서울시"));
         regionList.add(new Region("26", "부산시"));
         regionList.add(new Region("27", "대구시"));
@@ -61,62 +67,65 @@ public class YearAcctoCtprvnAcctoStatsJob extends QuartzJobBean {
         String formData = "sSearchFrom=" + startDateStr + "&sSearchTo=" + endDateStr;
 
         JobUtils.executeJob(context, tableName, jobData -> {
+            Connection connection = jobData.conn;
             String groupName = jobData.groupName;
             String jobName = jobData.jobName;
+            SchedulerLogService logService = (SchedulerLogService) jobData.logService;
             int count = 0;
-            Connection connection = jobData.conn;
 
             String query = Utils.getSQLString("src/main/resources/sql/collection/movie/YearAcctoCtprvnAcctoStats.sql");
 
-            PreparedStatement pstmt = connection.prepareStatement(query);
+            try (PreparedStatement pstmt = connection.prepareStatement(query);) {
+                String html = webClient.post().uri(url).contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .bodyValue(formData).retrieve().bodyToMono(String.class).block();
 
-            String html = webClient.post().uri(url).contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                    .bodyValue(formData).retrieve().bodyToMono(String.class).block();
-
-            if (html == null) {
-                jobData.logService.create(
-                        new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, "html is null"));
-                return;
-            }
-            Document document = Jsoup.parse(html);
-            List<Element> rows = document.select("tbody > tr");
-
-            for (Region region : regionList) {
-                Element nowRow = rows.stream()
-                        .filter(row -> Objects.requireNonNull(row.selectFirst("td")).text().equals(region.name))
-                        .findFirst().orElse(null);
-                if (nowRow == null) {
-                    pstmt.setString(1, startDate.format(DateTimeFormatter.ofPattern("yyyy")));
-                    pstmt.setString(2, region.code);
-                    pstmt.setString(3, region.code);
-                    BigDecimal zero = new BigDecimal(0);
-                    pstmt.setBigDecimal(4, zero);
-                    pstmt.setBigDecimal(5, zero);
-                    pstmt.setBigDecimal(6, zero);
-                } else {
-                    List<Element> cells = nowRow.select("td");
-                    pstmt.setString(1, startDate.format(DateTimeFormatter.ofPattern("yyyy")));
-                    pstmt.setString(2, region.code);
-                    pstmt.setString(3, region.code);
-                    BigDecimal all_count = new BigDecimal(cells.get(9).text().replace(",", ""));
-                    BigDecimal all_amount = new BigDecimal(cells.get(10).text().replace(",", ""));
-                    BigDecimal all_people = new BigDecimal(cells.get(11).text().replace(",", ""));
-                    pstmt.setBigDecimal(4, all_count);
-                    pstmt.setBigDecimal(5, all_amount);
-                    pstmt.setBigDecimal(6, all_people);
+                if (html == null) {
+                    logService.create(
+                            new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, "html is null"));
+                    return;
                 }
-                pstmt.addBatch();
-                count++;
+                Document document = Jsoup.parse(html);
+                List<Element> rows = document.select("tbody > tr");
+
+                for (Region region : regionList) {
+                    Element nowRow = rows.stream()
+                            .filter(row -> Objects.requireNonNull(row.selectFirst("td")).text().equals(region.name))
+                            .findFirst().orElse(null);
+                    if (nowRow == null) {
+                        pstmt.setString(1, startDate.format(DateTimeFormatter.ofPattern("yyyy")));
+                        pstmt.setString(2, region.code);
+                        pstmt.setString(3, region.code);
+                        BigDecimal zero = new BigDecimal(0);
+                        pstmt.setBigDecimal(4, zero);
+                        pstmt.setBigDecimal(5, zero);
+                        pstmt.setBigDecimal(6, zero);
+                    } else {
+                        List<Element> cells = nowRow.select("td");
+                        pstmt.setString(1, startDate.format(DateTimeFormatter.ofPattern("yyyy")));
+                        pstmt.setString(2, region.code);
+                        pstmt.setString(3, region.code);
+                        BigDecimal all_count = new BigDecimal(cells.get(9).text().replace(",", ""));
+                        BigDecimal all_amount = new BigDecimal(cells.get(10).text().replace(",", ""));
+                        BigDecimal all_people = new BigDecimal(cells.get(11).text().replace(",", ""));
+                        pstmt.setBigDecimal(4, all_count);
+                        pstmt.setBigDecimal(5, all_amount);
+                        pstmt.setBigDecimal(6, all_people);
+                    }
+                    pstmt.addBatch();
+                    count++;
+                }
+
+                pstmt.executeBatch();
+
+                Optional<Integer> updtCount = Utils.getUpdtCount(tableName);
+                if (!updtCount.isPresent()) {
+                    throw new Exception("getUpdtCount error");
+                }
+
+                logService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count, count - updtCount.get(), updtCount.get()));
+
+                flagService.create(new YearlyCollectionFlag(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy")), tableName, true));
             }
-
-            pstmt.executeBatch();
-
-            Optional<Integer> updtCount = Utils.getUpdtCount(tableName);
-            if (!updtCount.isPresent()) {
-                throw new Exception("getUpdtCount error");
-            }
-
-            jobData.logService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count, count - updtCount.get(), updtCount.get()));
         });
     }
 
