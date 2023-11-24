@@ -140,7 +140,7 @@ public class ViewingInfoJob extends QuartzJobBean {
                 }
                 schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count.get(), count.get() - updt_count.get(), updt_count.get()));
 
-                flagService.create(new DailyCollectionFlag(LocalDate.now(), tableName, true));
+                flagService.create(new DailyCollectionFlag(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")), tableName, true));
             }
         });
     }

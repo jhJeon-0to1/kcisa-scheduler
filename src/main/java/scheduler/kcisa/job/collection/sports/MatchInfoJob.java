@@ -108,7 +108,7 @@ public class MatchInfoJob extends QuartzJobBean {
                 System.out.println("스포츠 일별 경기 수집 완료");
                 schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count, count - updt_count.get(), updt_count.get()));
 
-                flagService.create(new DailyCollectionFlag(LocalDate.now(), tableName, true));
+                flagService.create(new DailyCollectionFlag(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")), tableName, true));
             }
         });
 

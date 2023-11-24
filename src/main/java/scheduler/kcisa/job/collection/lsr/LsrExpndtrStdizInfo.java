@@ -77,7 +77,6 @@ public class LsrExpndtrStdizInfo extends QuartzJobBean {
 
                         if (response != null) {
                             JsonNode rows = response.get("data");
-                            System.out.println(city.getCode() + " " + induty.getCode() + " " + rows.size() + " 수집완료");
 
                             for (JsonNode row : rows) {
                                 long timeStamp = (row.get("BASE_DT").asLong() / 1000);
@@ -116,7 +115,7 @@ public class LsrExpndtrStdizInfo extends QuartzJobBean {
                 System.out.println(tableName + " : " + count + "건 수집 완료");
                 schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count, count - updt_count.get(), updt_count.get()));
 
-                flagService.create(new DailyCollectionFlag(LocalDate.now(), tableName, true));
+                flagService.create(new DailyCollectionFlag(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")), tableName, true));
             }
         });
     }

@@ -19,8 +19,8 @@ public class DailyAnalysisFlag {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ANALS_DALY_FLAG_SEQ_NO")
     private Long Id;
-    @Column(name = "ANALS_DALY_DE", length = 6)
-    private LocalDate date;
+    @Column(name = "ANALS_DALY_DE", length = 8)
+    private String date;
     @Column(length = 200, name = "ANALS_DALY_TABLE_NM", nullable = false)
     private String tableName;
     @Column(name = "ANALS_DALY_FLAG", nullable = false)
@@ -28,7 +28,7 @@ public class DailyAnalysisFlag {
     @Column(name = "ANALS_DT", columnDefinition = "DATETIME")
     private LocalDate analysisDt = LocalDate.now();
 
-    public DailyAnalysisFlag(LocalDate date, String tableName, boolean flag) {
+    public DailyAnalysisFlag(String date, String tableName, boolean flag) {
         this.date = date;
         this.tableName = tableName;
         this.flag = flag;

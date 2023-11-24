@@ -19,8 +19,8 @@ public class DailyCollectionFlag {
     @GeneratedValue(strategy = javax.persistence.GenerationType.IDENTITY)
     @Column(name = "COLCT_DALY_FLAG_SEQ_NO")
     private Long Id;
-    @Column(name = "COLCT_DALY_DE")
-    private LocalDate date;
+    @Column(name = "COLCT_DALY_DE", length = 8)
+    private String date;
     @Column(length = 200, name = "COLCT_DALY_TABLE_NM", nullable = false)
     private String tableName;
     @Column(name = "COLCT_DALY_FLAG", nullable = false)
@@ -28,7 +28,7 @@ public class DailyCollectionFlag {
     @Column(name = "COLCT_DT", columnDefinition = "DATETIME")
     private LocalDate colctDt = LocalDate.now();
 
-    public DailyCollectionFlag(LocalDate date, String tableName, boolean flag) {
+    public DailyCollectionFlag(String date, String tableName, boolean flag) {
         this.date = date;
         this.tableName = tableName;
         this.flag = flag;

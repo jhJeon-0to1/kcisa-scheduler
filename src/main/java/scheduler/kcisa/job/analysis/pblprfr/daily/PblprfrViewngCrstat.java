@@ -54,7 +54,7 @@ public class PblprfrViewngCrstat extends QuartzJobBean {
 
                 martSchedulerLogService.create(new MartSchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count));
 
-                flagService.create(new DailyAnalysisFlag(LocalDate.parse(flagDate), tableName, true));
+                flagService.create(new DailyAnalysisFlag(flagDate, tableName, true));
             }
         });
     }

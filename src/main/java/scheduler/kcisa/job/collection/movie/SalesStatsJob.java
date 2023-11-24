@@ -92,7 +92,7 @@ public class SalesStatsJob extends QuartzJobBean {
 
                 jobData.logService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count.get(), count.get() - updtCount.get(), updtCount.get()));
 
-                flagService.create(new DailyCollectionFlag(LocalDate.now(), tableName, true));
+                flagService.create(new DailyCollectionFlag(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")), tableName, true));
             }
         });
     }

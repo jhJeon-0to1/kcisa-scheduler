@@ -50,7 +50,7 @@ public class LsrEventInfo extends QuartzJobBean {
 
                 logService.create(new MartSchedulerLog(jobData.groupName, jobData.jobName, tableName, SchedulerStatus.SUCCESS, count));
 
-                flagService.create(new DailyCollectionFlag(LocalDate.now(), tableName, true));
+                flagService.create(new DailyCollectionFlag(flagDate, tableName, true));
             }
         });
     }

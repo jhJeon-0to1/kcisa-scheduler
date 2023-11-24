@@ -23,9 +23,10 @@ import java.util.List;
 
 @Component
 public class MovieRlsCrstatJob extends QuartzJobBean {
-    List<String> checkList = new ArrayList<>(Arrays.asList("colct_movie_ctprvn_accto_stats", "colct_movie_sales_stats", "colct_movie_info"));
+    List<String> checkList = new ArrayList<>(Arrays.asList("colct_movie_ctprvn_accto_stats", "colct_movie_sales_stats"));
+    List<String> movieCheckList = new ArrayList<>(Arrays.asList("colct_movie_info"));
     DailyAnalysisFlagService flagService;
-    String tableName = "MOVIE_RLS_CRSTAT";
+    String tableName = "MOVIE_RLS_CRSTAT".toLowerCase();
 
     public MovieRlsCrstatJob(DailyAnalysisFlagService flagService) {
         this.flagService = flagService;
@@ -40,6 +41,13 @@ public class MovieRlsCrstatJob extends QuartzJobBean {
         JobUtils.executeAnalysisJob(context, tableName, checkList, flagDate, ScheduleInterval.DAILY, jobData -> {
             Connection connection = jobData.conn;
             MartSchedulerLogService martSchedulerLogService = (MartSchedulerLogService) jobData.logService;
+
+            String flag = JobUtils.checkCollectFlag(movieCheckList, flagDate.substring(0, 6), ScheduleInterval.MONTHLY);
+            if (flag != null) {
+                martSchedulerLogService.create(new MartSchedulerLog(jobData.groupName, jobData.jobName, tableName, SchedulerStatus.FAILED, flag + " 테이블이 수집되지 않았습니다."));
+                return;
+            }
+
             String query = Utils.getSQLString("src/main/resources/sql/analysis/movie/MovieRlsCrstat.sql");
 
             try (PreparedStatement pstmt = connection.prepareStatement(query);) {
@@ -51,7 +59,7 @@ public class MovieRlsCrstatJob extends QuartzJobBean {
 
                 martSchedulerLogService.create(new MartSchedulerLog(jobData.groupName, jobData.jobName, tableName, SchedulerStatus.SUCCESS, count));
 
-                flagService.create(new DailyAnalysisFlag(LocalDate.now(), tableName, true));
+                flagService.create(new DailyAnalysisFlag(flagDate, tableName, true));
             }
         });
     }

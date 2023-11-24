@@ -48,7 +48,7 @@ public class MobileAplctnUseTimeCrstat extends QuartzJobBean {
 
                 logService.create(new MartSchedulerLog(jobData.groupName, jobData.jobName, tableName, SchedulerStatus.SUCCESS, count));
 
-                flagService.create(new DailyAnalysisFlag(LocalDate.now(), tableName, true));
+                flagService.create(new DailyAnalysisFlag(flagDate, tableName, true));
             }
         });
     }

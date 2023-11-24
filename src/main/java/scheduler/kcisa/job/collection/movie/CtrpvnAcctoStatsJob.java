@@ -16,7 +16,6 @@ import scheduler.kcisa.service.flag.collection.DailyCollectionFlagService;
 import scheduler.kcisa.utils.JobUtils;
 import scheduler.kcisa.utils.Utils;
 
-import javax.sql.DataSource;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -29,8 +28,6 @@ import java.util.Optional;
 
 @Component
 public class CtrpvnAcctoStatsJob extends QuartzJobBean {
-    DataSource dataSource;
-    SchedulerLogService schedulerLogService;
     DailyCollectionFlagService flagService;
     WebClient webClient = WebClient.builder().baseUrl("https://www.kobis.or.kr").build();
     List<Region> regionList = new ArrayList<>();
@@ -71,6 +68,7 @@ public class CtrpvnAcctoStatsJob extends QuartzJobBean {
             String groupName = jobData.groupName;
             String jobName = jobData.jobName;
             Connection connection = jobData.conn;
+            SchedulerLogService schedulerLogService = (SchedulerLogService) jobData.logService;
 
             int count = 0;
 
@@ -132,7 +130,7 @@ public class CtrpvnAcctoStatsJob extends QuartzJobBean {
                 schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count,
                         count - updtCount.get(), updtCount.get()));
 
-                flagService.create(new DailyCollectionFlag(LocalDate.now(), tableName, true));
+                flagService.create(new DailyCollectionFlag(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")), tableName, true));
             }
         });
     }

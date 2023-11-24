@@ -113,20 +113,25 @@ public class JobUtils {
             for (String tableName : tableList) {
                 switch (interval) {
                     case DAILY:
-                        LocalDate date = LocalDate.parse(flagDate, DateTimeFormatter.ofPattern("yyyyMMdd"));
-                        DailyCollectionFlag flag = dailyCollectionFlagService.findByDateAndTableName(date, tableName);
+                        DailyCollectionFlag flag = dailyCollectionFlagService.findByDateAndTableName(flagDate, tableName);
 
-                        result = tableName;
+                        if (flag == null) {
+                            result = tableName;
+                        }
                         break;
                     case MONTHLY:
                         MonthlyCollectionFlag monthlyFlag = monthlyCollectionFlagService.findByDateAndTableName(flagDate, tableName);
 
-                        result = tableName;
+                        if (monthlyFlag == null) {
+                            result = tableName;
+                        }
                         break;
                     case YEARLY:
                         YearlyCollectionFlag yearlyFlag = yearlyCollectionFlagService.findByDateAndTableName(flagDate, tableName);
 
-                        result = tableName;
+                        if (yearlyFlag == null) {
+                            result = tableName;
+                        }
                         break;
                 }
                 if (result != null) {
@@ -144,8 +149,7 @@ public class JobUtils {
         for (String tableName : tableList) {
             switch (interval) {
                 case DAILY:
-                    LocalDate date = LocalDate.parse(flagDate, DateTimeFormatter.ofPattern("yyyyMMdd"));
-                    DailyAnalysisFlag flag = dailyAnalysisFlagService.findByDateAndTableName(date, tableName);
+                    DailyAnalysisFlag flag = dailyAnalysisFlagService.findByDateAndTableName(flagDate, tableName);
 
                     result = flag != null;
                     break;

@@ -24,7 +24,7 @@ public class LsrCollectionConfiguration {
                 .build();
         Trigger lsrExpndtrStdizInfoTrigger = TriggerBuilder.newTrigger().forJob(lsrExpndtrStdizInfoJobDetail)
 //                .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(10).withRepeatCount(0))
-                // 매일 02:00:00에 실행
+//                 매일 02:00:00에 실행
                 .withSchedule(CronScheduleBuilder.cronSchedule("0 0 2 * * ?").inTimeZone(TimeZone.getTimeZone("Asia/Seoul")))
                 .build();
         scheduler.scheduleJob(lsrExpndtrStdizInfoJobDetail, lsrExpndtrStdizInfoTrigger);

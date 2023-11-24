@@ -4,8 +4,6 @@ import org.springframework.stereotype.Service;
 import scheduler.kcisa.model.flag.analysis.DailyAnalysisFlag;
 import scheduler.kcisa.repo.flag.analysis.DailyAnalysisFlagRepository;
 
-import java.time.LocalDate;
-
 @Service
 public class DailyAnalysisFlagService {
     private final DailyAnalysisFlagRepository repository;
@@ -22,7 +20,7 @@ public class DailyAnalysisFlagService {
         repository.save(flag);
     }
 
-    public DailyAnalysisFlag findByDateAndTableName(LocalDate date, String tableName) {
+    public DailyAnalysisFlag findByDateAndTableName(String date, String tableName) {
         return repository.findByDateAndTableName(date, tableName);
     }
 }

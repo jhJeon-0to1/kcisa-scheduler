@@ -108,10 +108,9 @@ public class LstMvmnQyInfo extends QuartzJobBean {
                 if (!updt_count.isPresent()) {
                     throw new Exception("updt_count is null");
                 }
-                System.out.println(tableName + " : " + count + "건 수집 완료");
                 schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count, count - updt_count.get(), updt_count.get()));
 
-                flagService.create(new DailyCollectionFlag(LocalDate.now(), tableName, true));
+                flagService.create(new DailyCollectionFlag(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")), tableName, true));
             }
         });
     }

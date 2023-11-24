@@ -36,6 +36,13 @@ public class MobileCtgryUseQyInfo extends QuartzJobBean {
         this.flagService = flagService;
     }
 
+    private BigDecimal getBigDecimal(JsonNode node) {
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        return new BigDecimal(node.asText());
+    }
+
     @Override
     protected void executeInternal(@NotNull JobExecutionContext context) throws JobExecutionException {
         LocalDate stdDate = LocalDate.now().minusDays(3);
@@ -67,12 +74,12 @@ public class MobileCtgryUseQyInfo extends QuartzJobBean {
                     }
                     String categoryMain = data.get("categoryMain").asText();
                     String categorySub = data.get("categorySub").asText();
-                    BigDecimal userTotal = new BigDecimal(data.get("userTotal").asText());
-                    BigDecimal userAos = new BigDecimal(data.get("userAos").asText());
-                    BigDecimal userIos = new BigDecimal(data.get("userIos").asText());
-                    BigDecimal timeTotal = new BigDecimal(data.get("timeTotal").asText());
-                    BigDecimal timeAos = new BigDecimal(data.get("timeAos").asText());
-                    BigDecimal timeIos = new BigDecimal(data.get("timeIos").asText());
+                    BigDecimal userTotal = getBigDecimal(data.get("userTotal"));
+                    BigDecimal userAos = getBigDecimal(data.get("userAos"));
+                    BigDecimal userIos = getBigDecimal(data.get("userIos"));
+                    BigDecimal timeTotal = getBigDecimal(data.get("timeTotal"));
+                    BigDecimal timeAos = getBigDecimal(data.get("timeAos"));
+                    BigDecimal timeIos = getBigDecimal(data.get("timeIos"));
 
                     preparedStatement.setString(1, dateStr + categoryMain + categorySub);
                     preparedStatement.setString(2, dateStr);
@@ -81,12 +88,12 @@ public class MobileCtgryUseQyInfo extends QuartzJobBean {
                     preparedStatement.setString(5, dateStr.substring(6, 8));
                     preparedStatement.setString(6, categoryMain);
                     preparedStatement.setString(7, categorySub);
-                    preparedStatement.setBigDecimal(8, userTotal);
-                    preparedStatement.setBigDecimal(9, userAos);
-                    preparedStatement.setBigDecimal(10, userIos);
-                    preparedStatement.setBigDecimal(11, timeTotal);
-                    preparedStatement.setBigDecimal(12, timeAos);
-                    preparedStatement.setBigDecimal(13, timeIos);
+                    preparedStatement.setObject(8, userTotal);
+                    preparedStatement.setObject(9, userAos);
+                    preparedStatement.setObject(10, userIos);
+                    preparedStatement.setObject(11, timeTotal);
+                    preparedStatement.setObject(12, timeAos);
+                    preparedStatement.setObject(13, timeIos);
 
                     preparedStatement.addBatch();
                     count++;
@@ -101,7 +108,7 @@ public class MobileCtgryUseQyInfo extends QuartzJobBean {
                 schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count,
                         count - updt_count.get(), updt_count.get()));
 
-                flagService.create(new DailyCollectionFlag(LocalDate.now(), tableName, true));
+                flagService.create(new DailyCollectionFlag(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")), tableName, true));
             }
         });
     }
