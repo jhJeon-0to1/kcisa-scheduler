@@ -2,10 +2,10 @@ package scheduler.kcisa.job.analysis.lsr;
 
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import scheduler.kcisa.model.SchedulerStatus;
-import scheduler.kcisa.model.flag.collection.DailyCollectionFlag;
+import scheduler.kcisa.model.flag.analysis.DailyAnalysisFlag;
 import scheduler.kcisa.model.mart.MartSchedulerLog;
 import scheduler.kcisa.service.MartSchedulerLogService;
-import scheduler.kcisa.service.flag.collection.DailyCollectionFlagService;
+import scheduler.kcisa.service.flag.analysis.DailyAnalysisFlagService;
 import scheduler.kcisa.utils.JobUtils;
 import scheduler.kcisa.utils.ScheduleInterval;
 import scheduler.kcisa.utils.Utils;
@@ -20,10 +20,10 @@ import java.util.List;
 
 public class LsrExpndtrStdizInfo extends QuartzJobBean {
     List<String> checkList = new ArrayList<>(Arrays.asList("colct_lsr_expndtr_stdiz_info"));
-    DailyCollectionFlagService flagService;
+    DailyAnalysisFlagService flagService;
     String tableName = "LSR_EXPNDTR_STDIZ_INFO".toLowerCase();
 
-    public LsrExpndtrStdizInfo(DailyCollectionFlagService flagService) {
+    public LsrExpndtrStdizInfo(DailyAnalysisFlagService flagService) {
         this.flagService = flagService;
     }
 
@@ -41,7 +41,7 @@ public class LsrExpndtrStdizInfo extends QuartzJobBean {
 
                 logService.create(new MartSchedulerLog(jobData.groupName, jobData.jobName, tableName, SchedulerStatus.SUCCESS, count));
 
-                flagService.create(new DailyCollectionFlag(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")), tableName, true));
+                flagService.create(new DailyAnalysisFlag(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")), tableName, true));
             }
         });
     }

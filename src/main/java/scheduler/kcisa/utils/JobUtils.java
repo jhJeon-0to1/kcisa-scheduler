@@ -27,6 +27,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -44,8 +45,7 @@ public class JobUtils {
 
 
     @Autowired
-    public JobUtils(MartSchedulerLogService martSchedulerLogService, SchedulerLogService schedulerLogService, DataSource dataSource, DailyCollectionFlagService dailyCollectionFlagService,
-                    MonthlyCollectionFlagService monthlyCollectionFlagService, YearlyCollectionFlagService yearlyCollectionFlagService, DailyAnalysisFlagService dailyAnalysisFlagService, YearlyAnalysisFlagService yearlyAnalysisFlagService, MonthlyAnalysisFlagService monthlyAnalysisFlagService) throws SQLException {
+    public JobUtils(MartSchedulerLogService martSchedulerLogService, SchedulerLogService schedulerLogService, DataSource dataSource, DailyCollectionFlagService dailyCollectionFlagService, MonthlyCollectionFlagService monthlyCollectionFlagService, YearlyCollectionFlagService yearlyCollectionFlagService, DailyAnalysisFlagService dailyAnalysisFlagService, YearlyAnalysisFlagService yearlyAnalysisFlagService, MonthlyAnalysisFlagService monthlyAnalysisFlagService) throws SQLException {
         JobUtils.martSchedulerLogService = martSchedulerLogService;
         JobUtils.schedulerLogService = schedulerLogService;
         JobUtils.dataSource = dataSource;
@@ -74,8 +74,10 @@ public class JobUtils {
         String groupName = context.getJobDetail().getKey().getGroup();
         String jobName = context.getJobDetail().getKey().getName();
 
+        List<String> analysisTableList = Arrays.asList(tableName);
+
         try (Connection connection = dataSource.getConnection()) {
-            boolean isExist = checkAnalysisFlag(checkList, flagDate, interval);
+            boolean isExist = checkAnalysisFlag(analysisTableList, flagDate, interval);
             if (isExist) {
                 System.out.println(tableName + " 분석은 이미 완료되었습니다.");
                 return;
