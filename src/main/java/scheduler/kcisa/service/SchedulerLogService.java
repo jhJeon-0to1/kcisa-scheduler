@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service;
 import scheduler.kcisa.model.collection.SchedulerLog;
 import scheduler.kcisa.repo.SchedulerLogRepository;
 
+import java.util.List;
+
 @Service
 public class SchedulerLogService implements LogService<SchedulerLog> {
     private final SchedulerLogRepository schedulerLogRepository;
@@ -18,4 +20,19 @@ public class SchedulerLogService implements LogService<SchedulerLog> {
         return schedulerLogRepository.save(log);
     }
 
+    public List<SchedulerLog> findAll() {
+        return schedulerLogRepository.findAll();
+    }
+
+    public List<SchedulerLog> findTop50ByOrderByCreatedAtDesc() {
+        return schedulerLogRepository.findTop50ByOrderByCreatedAtDesc();
+    }
+
+    public List<SchedulerLog> findTop50ByOrderByIdDesc() {
+        return schedulerLogRepository.findTop50ByOrderByIdDesc();
+    }
+
+    public SchedulerLog findByGroupAndName(String group, String name) {
+        return schedulerLogRepository.findByGroupAndName(group, name);
+    }
 }

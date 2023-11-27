@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+          name="viewport">
+    <meta content="ie=edge" http-equiv="X-UA-Compatible">
+    <title>Document</title>
+    <style>
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+            padding: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+<h1>수집 로그</h1>
+<div>
+    <script defer>
+        const url = '/collection/api/log';
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                const tbody = document.querySelector('tbody');
+
+                data.forEach((item) => {
+                    const tr = document.createElement('tr');
+                    const td_group = document.createElement('td');
+                    const td_name = document.createElement('td');
+                    const td_status = document.createElement('td');
+                    const td_message = document.createElement('td');
+                    const td_createdAt = document.createElement('td');
+                    const td_count = document.createElement('td');
+                    const td_crt_count = document.createElement('td');
+                    const td_updt_count = document.createElement('td');
+
+                    td_group.textContent = item.group;
+                    td_name.textContent = item.name;
+                    td_status.textContent = item.status;
+                    td_message.textContent = item.message;
+                    td_createdAt.textContent = item.createdAt;
+                    td_count.textContent = item.count;
+                    td_crt_count.textContent = item.crt_count;
+                    td_updt_count.textContent = item.updt_count;
+
+                    tr.appendChild(td_group);
+                    tr.appendChild(td_name);
+                    tr.appendChild(td_status);
+                    tr.appendChild(td_createdAt);
+                    tr.appendChild(td_count);
+                    tr.appendChild(td_crt_count);
+                    tr.appendChild(td_updt_count);
+                    tr.appendChild(td_message);
+
+                    tbody.appendChild(tr);
+                });
+            });
+    </script>
+    <a href="/">홈으로</a>
+    <table>
+        <thead>
+        <tr>
+            <th style="min-width: 150px;">그룹</th>
+            <th style="min-width: 150px;">이름</th>
+            <th style="min-width: 100px;">상태</th>
+            <th>수집시간</th>
+            <th style="min-width: 100px;">총 개수</th>
+            <th style="min-width: 100px;">생성 개수</th>
+            <th style="min-width: 100px;">수정 개수</th>
+            <th>메시지</th>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
