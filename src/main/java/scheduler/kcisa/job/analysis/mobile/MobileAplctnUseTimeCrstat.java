@@ -31,7 +31,7 @@ public class MobileAplctnUseTimeCrstat extends QuartzJobBean {
 
     @Override
     protected void executeInternal(org.quartz.JobExecutionContext jobExecutionContext) throws org.quartz.JobExecutionException {
-        LocalDate stdDate = LocalDate.now().minusDays(3);
+        LocalDate stdDate = LocalDate.now().minusDays(4);
         String stdDateStr = stdDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String flagDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
@@ -43,6 +43,8 @@ public class MobileAplctnUseTimeCrstat extends QuartzJobBean {
             try (PreparedStatement pstmt = connection.prepareStatement(query);) {
                 pstmt.setString(1, stdDateStr);
                 pstmt.setString(2, stdDateStr);
+                pstmt.setString(3, stdDateStr);
+                pstmt.setString(4, stdDateStr);
 
                 int count = pstmt.executeUpdate();
 

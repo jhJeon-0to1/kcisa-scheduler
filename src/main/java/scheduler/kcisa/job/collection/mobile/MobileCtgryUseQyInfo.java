@@ -45,7 +45,7 @@ public class MobileCtgryUseQyInfo extends QuartzJobBean {
 
     @Override
     protected void executeInternal(@NotNull JobExecutionContext context) throws JobExecutionException {
-        LocalDate stdDate = LocalDate.now().minusDays(3);
+        LocalDate stdDate = LocalDate.now().minusDays(4); // 4일전 데이터 수집
         String date = stdDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
         JobUtils.executeJob(context, tableName, jobData -> {

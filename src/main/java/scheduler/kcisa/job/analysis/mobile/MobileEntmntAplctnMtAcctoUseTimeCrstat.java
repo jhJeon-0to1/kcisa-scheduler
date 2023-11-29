@@ -46,6 +46,8 @@ public class MobileEntmntAplctnMtAcctoUseTimeCrstat extends QuartzJobBean {
             try (PreparedStatement pstmt = connection.prepareStatement(query);) {
                 pstmt.setString(1, startDateStr);
                 pstmt.setString(2, endDateStr);
+                pstmt.setString(3, startDateStr);
+                pstmt.setString(4, endDateStr);
 
                 int result = pstmt.executeUpdate();
 
