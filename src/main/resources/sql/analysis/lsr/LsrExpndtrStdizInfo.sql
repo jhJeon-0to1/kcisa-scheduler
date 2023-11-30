@@ -12,8 +12,7 @@ select
   , '01'    as INDUTY_TY_CD
   , '외식 지출' as INDUTY_TY_NM
   , FLCTTN_RT
-from
-    colct_lsr_expndtr_stdiz_info
+from colct_lsr_expndtr_stdiz_info
 where
     INDUTY_TY_CD = '06'
 group by
@@ -29,8 +28,7 @@ select
   , '02'    as INDUTY_TY_CD
   , '숙박 지출' as INDUTY_TY_NM
   , FLCTTN_RT
-from
-    colct_lsr_expndtr_stdiz_info
+from colct_lsr_expndtr_stdiz_info
 where
     INDUTY_TY_CD = '07'
 group by
@@ -46,8 +44,7 @@ select
   , '03'    as INDUTY_TY_CD
   , '레저 지출' as INDUTY_TY_NM
   , FLCTTN_RT
-from
-    colct_lsr_expndtr_stdiz_info
+from colct_lsr_expndtr_stdiz_info
 where
     INDUTY_TY_CD = '04'
 group by
@@ -63,8 +60,7 @@ select
   , '04'    as INDUTY_TY_CD
   , '소비 지출' as INDUTY_TY_NM
   , FLCTTN_RT
-from
-    colct_lsr_expndtr_stdiz_info
+from colct_lsr_expndtr_stdiz_info
 where
     INDUTY_TY_CD = '02'
 group by

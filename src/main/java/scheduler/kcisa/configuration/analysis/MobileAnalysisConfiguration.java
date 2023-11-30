@@ -28,7 +28,7 @@ public class MobileAnalysisConfiguration {
         Trigger MobileAplctnUseTimeCrstatTrigger = TriggerBuilder.newTrigger().forJob(MobileAplctnUseTimeCrstatJobDetail)
 //                .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(10).withRepeatCount(0))
                 // 3시부터 7시까지 매일 0분에 실행
-                .withSchedule(CronScheduleBuilder.cronSchedule("0 0 3-7 * * ?").inTimeZone(TimeZone.getTimeZone("Asia/Seoul")))
+                .withSchedule(CronScheduleBuilder.cronSchedule("0 30 3-7 * * ?").inTimeZone(TimeZone.getTimeZone("Asia/Seoul")))
                 .build();
         scheduler.scheduleJob(MobileAplctnUseTimeCrstatJobDetail, MobileAplctnUseTimeCrstatTrigger);
 
@@ -45,7 +45,7 @@ public class MobileAnalysisConfiguration {
         Trigger MobileAplctnMtAcctoUseTimeCrstatTrigger = TriggerBuilder.newTrigger().forJob(MobileAplctnMtAcctoUseTimeCrstatJobDetail)
 //                .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(10).withRepeatCount(0))
                 // 매월 10일 3시부터 7시까지 0분에 실행
-                .withSchedule(CronScheduleBuilder.cronSchedule("0 0 3-7 10 * ?").inTimeZone(TimeZone.getTimeZone("Asia/Seoul")))
+                .withSchedule(CronScheduleBuilder.cronSchedule("0 30 3-7 10 * ?").inTimeZone(TimeZone.getTimeZone("Asia/Seoul")))
                 .build();
         scheduler.scheduleJob(MobileAplctnMtAcctoUseTimeCrstatJobDetail, MobileAplctnMtAcctoUseTimeCrstatTrigger);
 

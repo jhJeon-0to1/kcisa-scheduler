@@ -12,8 +12,7 @@ select
   , '01'     as DSTRCT_TY_CD
   , '생활 지역 ' as DSTRCT_TY_NM
   , MVMN_QY
-from
-    colct_lsr_mvmn_qy_info
+from colct_lsr_mvmn_qy_info
 where
     DSTRCT_TY_CD = '06'
 union all
@@ -27,8 +26,7 @@ select
   , '02'    as DSTRCT_TY_CD
   , '소비 지역' as DSTRCT_TY_NM
   , SUM(MVMN_QY)
-from
-    colct_lsr_mvmn_qy_info
+from colct_lsr_mvmn_qy_info
 where
     DSTRCT_TY_CD in ('01', '03')
 group by
@@ -44,8 +42,7 @@ select
   , '03'       as DSTRCT_TY_CD
   , '관광/레저 지역' as DSTRCT_TY_NM
   , SUM(MVMN_QY)
-from
-    colct_lsr_mvmn_qy_info
+from colct_lsr_mvmn_qy_info
 where
     DSTRCT_TY_CD in ('02', '05')
 group by
@@ -61,8 +58,7 @@ select
   , '00'    as DSTRCT_TY_CD
   , '전체 지역' as DSTRCT_TY_NM
   , SUM(MVMN_QY)
-from
-    colct_lsr_mvmn_qy_info
+from colct_lsr_mvmn_qy_info
 where
         DSTRCT_TY_CD in ('02', '05', '01', '03', '06')
 group by
