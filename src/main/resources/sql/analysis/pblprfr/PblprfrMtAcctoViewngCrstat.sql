@@ -24,20 +24,17 @@ SELECT
   , SUM(PBLPRFR_VIEWNG_NMPR_CO) * 1000 / (
     IFNULL(
             (SELECT POPLTN_CO
-             FROM
-                 ctprvn_accto_popltn_info AS PP
+             FROM ctprvn_accto_popltn_info AS PP
              WHERE
                    PP.CTPRVN_CD = B.CTPRVN_CD
                AND PP.BASE_YM = B.BASE_YM)
         , (SELECT POPLTN_CO
-           FROM
-               ctprvn_accto_popltn_info AS PP
+           FROM ctprvn_accto_popltn_info AS PP
            WHERE
                  PP.CTPRVN_CD = B.CTPRVN_CD
              AND PP.BASE_YM =
                  (SELECT MAX(BASE_YM) AS BASE_YM
-                  FROM
-                      ctprvn_accto_popltn_info AS P
+                  FROM ctprvn_accto_popltn_info AS P
                   WHERE
                       P.CTPRVN_CD = B.CTPRVN_CD))
     )
@@ -61,12 +58,10 @@ SELECT
   , SUM(IF(GENRE_CD = 'EEEA', PBLPRFR_VIEWNG_NMPR_CO,
            0))                      AS COMPLEX_VIEWNG_NMPR_CO
   , (SELECT METRP_AT
-     FROM
-         ctprvn_info AS A
+     FROM ctprvn_info AS A
      WHERE
          A.CTPRVN_CD = B.CTPRVN_CD) AS METRP_AT
-FROM
-    colct_pblprfr_viewng_mt_accto_ctprvn_accto_stats AS B
+FROM colct_pblprfr_viewng_mt_accto_ctprvn_accto_stats AS B
 WHERE
     BASE_YM = ?
 GROUP BY
@@ -88,20 +83,17 @@ SELECT
   , SUM(PBLPRFR_VIEWNG_NMPR_CO) * 1000 / (
     IFNULL(
             (SELECT POPLTN_CO
-             FROM
-                 ctprvn_accto_popltn_info AS PP
+             FROM ctprvn_accto_popltn_info AS PP
              WHERE
                    PP.CTPRVN_CD = '00'
                AND PP.BASE_YM = B.BASE_YM)
         , (SELECT POPLTN_CO
-           FROM
-               ctprvn_accto_popltn_info AS PP
+           FROM ctprvn_accto_popltn_info AS PP
            WHERE
                  PP.CTPRVN_CD = '00'
              AND PP.BASE_YM =
                  (SELECT MAX(BASE_YM) AS BASE_YM
-                  FROM
-                      ctprvn_accto_popltn_info AS P
+                  FROM ctprvn_accto_popltn_info AS P
                   WHERE
                       P.CTPRVN_CD = '00'))
     )
@@ -125,8 +117,7 @@ SELECT
   , SUM(IF(GENRE_CD = 'EEEA', PBLPRFR_VIEWNG_NMPR_CO,
            0))                      AS COMPLEX_RASNG_CUTIN_CO
   , 'N'                             AS METRP_AT
-FROM
-    colct_pblprfr_viewng_mt_accto_ctprvn_accto_stats AS B
+FROM colct_pblprfr_viewng_mt_accto_ctprvn_accto_stats AS B
 WHERE
     BASE_YM = ?
 GROUP BY

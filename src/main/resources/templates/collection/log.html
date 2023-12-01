@@ -6,6 +6,15 @@
           name="viewport">
     <meta content="ie=edge" http-equiv="X-UA-Compatible">
     <title>Document</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/dayjs.min.js"></script>
+    <script>
+        const dayjs = window.dayjs;
+        //     locale 설정
+        dayjs.locale('ko');
+        //     format 설정
+
+
+    </script>
     <style>
         table, th, td {
             border: 1px solid black;
@@ -36,11 +45,12 @@
                     const td_crt_count = document.createElement('td');
                     const td_updt_count = document.createElement('td');
 
+
                     td_group.textContent = item.group;
                     td_name.textContent = item.name;
                     td_status.textContent = item.status;
                     td_message.textContent = item.message;
-                    td_createdAt.textContent = item.createdAt;
+                    td_createdAt.textContent = dayjs(item.createdAt).format('YYYY-MM-DD HH:mm:ss');
                     td_count.textContent = item.count;
                     td_crt_count.textContent = item.crt_count;
                     td_updt_count.textContent = item.updt_count;

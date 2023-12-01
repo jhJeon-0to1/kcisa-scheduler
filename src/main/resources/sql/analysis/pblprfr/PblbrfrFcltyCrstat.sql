@@ -13,20 +13,18 @@ SELECT
            1,
            0))                           as MIDDL_THEAT_CO
   , SUM(IF(FCLTY_SEAT_CO <= 300, 1, 0))  as SMALL_THEAT_CO
-FROM
-    (SELECT
-         ? as BASE_YM
-       , A.CTPRVN_CD
-       , A.CTPRVN_NM
-       , B.FCLTY_SEAT_CO
-     FROM
-         colct_pblprfr_fclty_info as A
-             JOIN colct_pblprfr_fclty_detail_info as B
-                  ON A.PBLPRFR_FCLTY_ID =
-                     B.PBLPRFR_FCLTY_ID
-                      AND A.COLCT_YM = B.COLCT_YM
-     WHERE
-         A.COLCT_YM = ?) AS DATA
+FROM (SELECT
+          ? as BASE_YM
+        , A.CTPRVN_CD
+        , A.CTPRVN_NM
+        , B.FCLTY_SEAT_CO
+      FROM colct_pblprfr_fclty_info        as A
+      JOIN colct_pblprfr_fclty_detail_info as B
+           ON A.PBLPRFR_FCLTY_ID =
+              B.PBLPRFR_FCLTY_ID
+               AND A.COLCT_YM = B.COLCT_YM
+      WHERE
+          A.COLCT_YM = ?) AS DATA
 GROUP BY
     BASE_YM, CTPRVN_CD
 ON DUPLICATE KEY UPDATE

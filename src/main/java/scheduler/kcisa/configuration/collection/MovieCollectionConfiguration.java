@@ -61,8 +61,8 @@ public class MovieCollectionConfiguration {
         JobDetail InfoJobDetail = JobBuilder.newJob(InfoJob.class).withIdentity("영화 정보 수집", "영화 관람").build();
         Trigger InfoTrigger = TriggerBuilder.newTrigger().forJob(InfoJobDetail)
 //                .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(60).withRepeatCount(0))
-                // 매월 5일 2시에 실행
-                .withSchedule(CronScheduleBuilder.cronSchedule("0 0 2 5 * ?").inTimeZone(TimeZone.getTimeZone("Asia/Seoul")))
+                // 매월 1,5,10,15,20,25일 2시에 실행
+                .withSchedule(CronScheduleBuilder.cronSchedule("0 0 2 1,5,10,15,20,25 * ?").inTimeZone(TimeZone.getTimeZone("Asia/Seoul")))
                 .build();
         scheduler.scheduleJob(InfoJobDetail, InfoTrigger); // 영화 정보 수집
     }

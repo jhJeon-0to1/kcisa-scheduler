@@ -13,20 +13,17 @@ SELECT
   , (T.MOVIE_ADNC_CO * 1000 /
      IFNULL(
              (SELECT POPLTN_CO
-              FROM
-                  ctprvn_accto_popltn_info AS PP
+              FROM ctprvn_accto_popltn_info AS PP
               WHERE
                     PP.CTPRVN_CD = T.CTPRVN_CD
                 AND PP.BASE_YM = T.BASE_YM)
          , (SELECT POPLTN_CO
-            FROM
-                ctprvn_accto_popltn_info AS PP
+            FROM ctprvn_accto_popltn_info AS PP
             WHERE
                   PP.CTPRVN_CD = T.CTPRVN_CD
               AND PP.BASE_YM =
                   (SELECT MAX(BASE_YM) AS BASE_YM
-                   FROM
-                       ctprvn_accto_popltn_info AS P
+                   FROM ctprvn_accto_popltn_info AS P
                    WHERE
                        P.CTPRVN_CD = T.CTPRVN_CD))
      )
@@ -34,12 +31,10 @@ SELECT
   , T.EXPNDTR_PRICE                   AS EXPNDTR_PRICE
   , T.EXPNDTR_PRICE / T.MOVIE_ADNC_CO AS SEAT_PER_EXPNDTR_PRICE
   , (SELECT METRP_AT
-     FROM
-         ctprvn_info AS P
+     FROM ctprvn_info AS P
      WHERE
          T.CTPRVN_CD = P.CTPRVN_CD)   AS METRP_AREA_AT
-FROM
-    colct_movie_mt_accto_ctprvn_accto_stats AS T
+FROM colct_movie_mt_accto_ctprvn_accto_stats AS T
 where
     BASE_YM = ?
 UNION ALL
@@ -53,20 +48,17 @@ SELECT
   , (M.MOVIE_ADNC_CO * 1000 /
      IFNULL(
              (SELECT POPLTN_CO
-              FROM
-                  ctprvn_accto_popltn_info AS PP
+              FROM ctprvn_accto_popltn_info AS PP
               WHERE
                     PP.CTPRVN_CD = '00'
                 AND PP.BASE_YM = M.BASE_YM)
          , (SELECT POPLTN_CO
-            FROM
-                ctprvn_accto_popltn_info AS PP
+            FROM ctprvn_accto_popltn_info AS PP
             WHERE
                   PP.CTPRVN_CD = '00'
               AND PP.BASE_YM =
                   (SELECT MAX(BASE_YM) AS BASE_YM
-                   FROM
-                       ctprvn_accto_popltn_info AS P
+                   FROM ctprvn_accto_popltn_info AS P
                    WHERE
                        P.CTPRVN_CD = '00'))
      )
@@ -74,8 +66,7 @@ SELECT
   , M.EXPNDTR_PRICE                   AS EXPNDTR_PRICE
   , M.EXPNDTR_PRICE / M.MOVIE_ADNC_CO AS SEAT_PER_EXPNDTR_PRICE
   , 'N'                               AS METRP_AREA_AT
-FROM
-    colct_movie_mt_accto_sales_stats AS M
+FROM colct_movie_mt_accto_sales_stats AS M
 WHERE
     M.BASE_YM = ?
 ON DUPLICATE KEY UPDATE

@@ -19,18 +19,22 @@ SELECT
   , DATA.PBLPRFR_SALES_PRICE
   , DATA.RASNG_CUTIN_RATE
   , DATA.POPLTN_PER_VIEWNG_NMPR_CO
-  , DATA.POPLTN_PER_VIEWNG_NMPR_CO /
-    STD.POPLTN_PER_VIEWNG_NMPR_CO *
-    100                                  AS VIEWNG_NMPR_CO_SCORE
-  , DATA.POPLTN_PER_EXPNDTR_PRICE /
-    STD.POPLTN_PER_EXPNDTR_PRICE *
-    100                                  AS EXPNDTR_PRICE_SCORE
-  , ((DATA.POPLTN_PER_VIEWNG_NMPR_CO /
-      STD.POPLTN_PER_VIEWNG_NMPR_CO *
-      100) +
-     (DATA.POPLTN_PER_EXPNDTR_PRICE /
-      STD.POPLTN_PER_EXPNDTR_PRICE *
-      100)) / 2                          AS GNRLZ_SCORE
+  , (IF(STD.POPLTN_PER_VIEWNG_NMPR_CO = 0, NULL,
+        DATA.POPLTN_PER_VIEWNG_NMPR_CO /
+        STD.POPLTN_PER_VIEWNG_NMPR_CO *
+        100))                            AS VIEWNG_NMPR_CO_SCORE
+  , (IF(STD.POPLTN_PER_EXPNDTR_PRICE = 0, null,
+        DATA.POPLTN_PER_EXPNDTR_PRICE /
+        STD.POPLTN_PER_EXPNDTR_PRICE *
+        100))                            AS EXPNDTR_PRICE_SCORE
+  , (IF(STD.POPLTN_PER_VIEWNG_NMPR_CO = 0, NULL,
+        DATA.POPLTN_PER_VIEWNG_NMPR_CO /
+        STD.POPLTN_PER_VIEWNG_NMPR_CO *
+        100) +
+     IF(STD.POPLTN_PER_EXPNDTR_PRICE = 0, null,
+        DATA.POPLTN_PER_EXPNDTR_PRICE /
+        STD.POPLTN_PER_EXPNDTR_PRICE *
+        100)) / 2                        AS GNRLZ_SCORE
   , (SELECT LRGE_THEAT_CO
      FROM pblprfr_fclty_crstat AS F
      WHERE
@@ -75,6 +79,8 @@ FROM (SELECT
                 SUM(PBLPRFR_CO) *
                 100                             AS RASNG_CUTIN_RATE
             FROM colct_pblprfr_viewng_mt_accto_ctprvn_accto_stats
+            WHERE
+                BASE_YM = ?
             GROUP BY
                 BASE_YM, CTPRVN_CD) AS LOCAL
       JOIN ctprvn_accto_popltn_info AS POP
@@ -106,6 +112,8 @@ FROM (SELECT
                 SUM(PBLPRFR_CO) *
                 100                             AS RASNG_CUTIN_RATE
             FROM colct_pblprfr_viewng_mt_accto_ctprvn_accto_stats
+            WHERE
+                BASE_YM = ?
             GROUP BY
                 BASE_YM)            AS NATION
       JOIN ctprvn_accto_popltn_info AS POP

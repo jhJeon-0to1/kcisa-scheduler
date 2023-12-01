@@ -40,12 +40,10 @@ SELECT
   , SUM(IF(GENRE_CD = 'EEEA', PBLPRFR_RASNG_CUTIN_CO,
            0))                      AS COMPLEX_RASNG_CUTIN_CO
   , (SELECT METRP_AT
-     FROM
-         ctprvn_info AS A
+     FROM ctprvn_info AS A
      WHERE
          A.CTPRVN_CD = B.CTPRVN_CD) AS METRP_AT
-FROM
-    colct_pblprfr_viewng_ctprvn_accto_stats AS B
+FROM colct_pblprfr_viewng_ctprvn_accto_stats AS B
 WHERE
     BASE_DE = ?
 GROUP by
@@ -84,8 +82,7 @@ SELECT
   , SUM(IF(GENRE_CD = 'EEEA', PBLPRFR_RASNG_CUTIN_CO,
            0))                  AS COMPLEX_RASNG_CUTIN_CO
   , 'N'                         AS METRP_AT
-FROM
-    colct_pblprfr_viewng_ctprvn_accto_stats AS B
+FROM colct_pblprfr_viewng_ctprvn_accto_stats AS B
 WHERE
     BASE_DE = ?
 GROUP by

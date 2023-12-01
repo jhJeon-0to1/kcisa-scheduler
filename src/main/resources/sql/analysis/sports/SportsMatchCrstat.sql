@@ -10,8 +10,7 @@ SELECT
   , BASE_DAY
   , CTPRVN_CD
   , (SELECT CTPRVN_NM
-     FROM
-         ctprvn_info AS C
+     FROM ctprvn_info AS C
      WHERE
          C.CTPRVN_CD = S.CTPRVN_CD) AS CTPRVN_NM
   , SPORTS_MATCH_CO
@@ -20,8 +19,7 @@ SELECT
   , KBL_MATCH_CO
   , WKBL_MATCH_CO
   , KOVO_MATCH_CO
-FROM
-    colct_sports_viewng_info AS S
+FROM colct_sports_viewng_info AS S
 WHERE
     BASE_DE = ?
 UNION ALL
@@ -38,8 +36,7 @@ SELECT
   , SUM(KBL_MATCH_CO)    AS KBL_MATCH_CO
   , SUM(WKBL_MATCH_CO)   AS WKBL_MATCH_CO
   , SUM(KOVO_MATCH_CO)   AS KOVO_MATCH_CO
-FROM
-    colct_sports_viewng_info AS S
+FROM colct_sports_viewng_info AS S
 WHERE
     BASE_DE = ?
 GROUP BY

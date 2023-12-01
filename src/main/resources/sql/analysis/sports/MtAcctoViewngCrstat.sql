@@ -11,26 +11,22 @@ SELECT
   , BASE_MT
   , CTPRVN_CD
   , (SELECT CTPRVN_NM
-     FROM
-         ctprvn_info AS C
+     FROM ctprvn_info AS C
      WHERE
          C.CTPRVN_CD = S.CTPRVN_CD)       AS CTPRVN_NM
   , SUM(SPORTS_VIEWNG_NMPR_CO)            AS SPORTS_VIEWNG_NMPR_CO
   , SUM(SPORTS_VIEWNG_NMPR_CO) * 1000 / IFNULL(
         (SELECT POPLTN_CO
-         FROM
-             ctprvn_accto_popltn_info AS PP
+         FROM ctprvn_accto_popltn_info AS PP
          WHERE
                PP.CTPRVN_CD = S.CTPRVN_CD
            AND PP.BASE_YM = CONCAT(S.BASE_YEAR, S.BASE_MT))
     , (SELECT POPLTN_CO
-       FROM
-           ctprvn_accto_popltn_info AS PP
+       FROM ctprvn_accto_popltn_info AS PP
        WHERE
              PP.CTPRVN_CD = S.CTPRVN_CD
          AND PP.BASE_YM = (SELECT MAX(BASE_YM) AS BASE_YM
-                           FROM
-                               ctprvn_accto_popltn_info AS P
+                           FROM ctprvn_accto_popltn_info AS P
                            WHERE
                                P.CTPRVN_CD = S.CTPRVN_CD))
                                         ) AS POPLTN_PER_VIEWNG_NMPR_CO
@@ -39,8 +35,7 @@ SELECT
   , SUM(KBL_VIEWNG_NMPR_CO)               AS KBL_VIEWNG_NMPR_CO
   , SUM(WKBL_VIEWNG_NMPR_CO)              AS WKBL_VIEWNG_NMPR_CO
   , SUM(KOVO_VIEWNG_NMPR_CO)              AS KOVO_VIEWNG_NMPR_CO
-FROM
-    colct_sports_viewng_info AS S
+FROM colct_sports_viewng_info AS S
 WHERE
       BASE_YEAR = ?
   and BASE_MT = ?
@@ -56,19 +51,16 @@ SELECT
   , SUM(SPORTS_VIEWNG_NMPR_CO)            AS SPORTS_VIEWNG_NMPR_CO
   , SUM(SPORTS_VIEWNG_NMPR_CO) * 1000 / IFNULL(
         (SELECT POPLTN_CO
-         FROM
-             ctprvn_accto_popltn_info AS PP
+         FROM ctprvn_accto_popltn_info AS PP
          WHERE
                PP.CTPRVN_CD = '00'
            AND PP.BASE_YM = CONCAT(S.BASE_YEAR, S.BASE_MT))
     , (SELECT POPLTN_CO
-       FROM
-           ctprvn_accto_popltn_info AS PP
+       FROM ctprvn_accto_popltn_info AS PP
        WHERE
              PP.CTPRVN_CD = '00'
          AND PP.BASE_YM = (SELECT MAX(BASE_YM) AS BASE_YM
-                           FROM
-                               ctprvn_accto_popltn_info AS P
+                           FROM ctprvn_accto_popltn_info AS P
                            WHERE
                                P.CTPRVN_CD = '00'))
                                         ) AS POPLTN_PER_VIEWNG_NMPR_CO
@@ -77,8 +69,7 @@ SELECT
   , SUM(KBL_VIEWNG_NMPR_CO)               AS KBL_VIEWNG_NMPR_CO
   , SUM(WKBL_VIEWNG_NMPR_CO)              AS WKBL_VIEWNG_NMPR_CO
   , SUM(KOVO_VIEWNG_NMPR_CO)              AS KOVO_VIEWNG_NMPR_CO
-FROM
-    colct_sports_viewng_info AS S
+FROM colct_sports_viewng_info AS S
 WHERE
       BASE_YEAR = ?
   and BASE_MT = ?

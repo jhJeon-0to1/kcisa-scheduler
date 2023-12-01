@@ -15,8 +15,7 @@ SELECT
   , AWAY_TEAM_NM
   , LEA_NM
   , SPORTS_VIEWNG_NMPR_CO
-FROM
-    colct_sports_match_info
+FROM colct_sports_match_info
 WHERE
     MATCH_DE = ?
 ON DUPLICATE KEY UPDATE

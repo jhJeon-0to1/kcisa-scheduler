@@ -34,8 +34,10 @@ public class SportsActivateCrstatsJob extends QuartzJobBean {
     @Override
     protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
         LocalDate stdDate = LocalDate.now().minusMonths(1);
-        String stdYear = stdDate.format(DateTimeFormatter.ofPattern("yyyy"));
-        String stdMt = stdDate.format(DateTimeFormatter.ofPattern("MM"));
+        LocalDate startDate = stdDate.withDayOfMonth(1);
+        LocalDate endDate = stdDate.withDayOfMonth(stdDate.lengthOfMonth());
+        String startDateStr = startDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String endDateStr = endDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String flagDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
 
         JobUtils.executeAnalysisJob(context, tableName, checkList, flagDate, ScheduleInterval.MONTHLY, jobData -> {
@@ -45,10 +47,10 @@ public class SportsActivateCrstatsJob extends QuartzJobBean {
             String query = Utils.getSQLString("src/main/resources/sql/analysis/sports/SportsActivateCrstats.sql");
 
             try (PreparedStatement pstmt = connection.prepareStatement(query);) {
-                pstmt.setString(1, stdYear);
-                pstmt.setString(2, stdMt);
-                pstmt.setString(3, stdYear);
-                pstmt.setString(4, stdMt);
+                pstmt.setString(1, startDateStr);
+                pstmt.setString(2, endDateStr);
+                pstmt.setString(3, startDateStr);
+                pstmt.setString(4, endDateStr);
 
                 int count = pstmt.executeUpdate();
 
