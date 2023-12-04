@@ -1,18 +1,21 @@
-INSERT INTO colct_pblprfr_viewng_year_accto_ctprvn_accto_stats
+INSERT INTO
+	colct_pblprfr_viewng_year_accto_ctprvn_accto_stats
 (BASE_YEAR, CTPRVN_CD, CTPRVN_NM, GENRE_CD, GENRE_NM,
- PBLPRFR_RASNG_CUTIN_CO, PBLPRFR_STGNG_CO,
- PBLPRFR_SALES_PRICE, PBLPRFR_VIEWNG_NMPR_CO, PBLPRFR_CO,
+ RASNG_CUTIN_CO, PBLPRFR_STGNG_CO,
+ EXPNDTR_PRICE, VIEWNG_NMPR_CO, PBLPRFR_CO,
  COLCT_YM)
-    VALUE (?, ?, (SELECT CTPRVN_NM
-                  FROM ctprvn_info
-                  WHERE CTPRVN_CD = ?), ?, ?, ?, ?, ?, ?, ?,
-           DATE_FORMAT(NOW(), '%Y%m'))
-ON DUPLICATE KEY UPDATE BASE_YEAR              = VALUES(BASE_YEAR)
-                      , CTPRVN_NM              = VALUES(CTPRVN_NM)
-                      , GENRE_NM               = VALUES(GENRE_NM)
-                      , PBLPRFR_RASNG_CUTIN_CO = VALUES(PBLPRFR_RASNG_CUTIN_CO)
-                      , PBLPRFR_CO             = VALUES(PBLPRFR_CO)
-                      , PBLPRFR_STGNG_CO       = VALUES(PBLPRFR_STGNG_CO)
-                      , PBLPRFR_SALES_PRICE    = VALUES(PBLPRFR_SALES_PRICE)
-                      , PBLPRFR_VIEWNG_NMPR_CO = VALUES(PBLPRFR_VIEWNG_NMPR_CO)
-                      , UPDT_YM                = DATE_FORMAT(NOW(), '%Y%m')
+	VALUE (?, ?, (SELECT CTPRVN_NM
+	              FROM ctprvn_info
+	              WHERE
+		              CTPRVN_CD = ?), ?, ?, ?, ?, ?, ?, ?,
+	       DATE_FORMAT(NOW(), '%Y%m'))
+ON DUPLICATE KEY UPDATE
+	                 BASE_YEAR        = VALUES(BASE_YEAR)
+                 , CTPRVN_NM        = VALUES(CTPRVN_NM)
+                 , GENRE_NM         = VALUES(GENRE_NM)
+                 , RASNG_CUTIN_CO   = VALUES(RASNG_CUTIN_CO)
+                 , PBLPRFR_CO       = VALUES(PBLPRFR_CO)
+                 , PBLPRFR_STGNG_CO = VALUES(PBLPRFR_STGNG_CO)
+                 , EXPNDTR_PRICE    = VALUES(EXPNDTR_PRICE)
+                 , VIEWNG_NMPR_CO   = VALUES(VIEWNG_NMPR_CO)
+                 , UPDT_YM          = DATE_FORMAT(NOW(), '%Y%m')

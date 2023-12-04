@@ -14,6 +14,8 @@ import scheduler.kcisa.model.collection.SchedulerLog;
 import scheduler.kcisa.model.flag.collection.MonthlyCollectionFlag;
 import scheduler.kcisa.service.SchedulerLogService;
 import scheduler.kcisa.service.flag.collection.MonthlyCollectionFlagService;
+import scheduler.kcisa.utils.JobUtils;
+import scheduler.kcisa.utils.ScheduleInterval;
 import scheduler.kcisa.utils.Utils;
 
 import javax.sql.DataSource;
@@ -22,6 +24,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -91,7 +94,15 @@ public class CtprvnAcctoPopltnInfo extends QuartzJobBean {
         String jobName = jobExecutionContext.getJobDetail().getKey().getName();
 
         String tableName = "ctprvn_accto_popltn_info";
+        List<String> checkList = Arrays.asList(tableName);
+
         try (Connection connection = dataSource.getConnection()) {
+            String existTable = JobUtils.checkCollectFlag(checkList, LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")), ScheduleInterval.DAILY);
+            if (existTable != null) {
+                System.out.println(existTable + " 테이블은 이미 수집 완료 되었습니다.");
+                return;
+            }
+
             int count = 0;
             final LocalDate endDate = LocalDate.now().minusMonths(1).withDayOfMonth(1);
             final LocalDate startDate = endDate.minusMonths(1).withDayOfMonth(1);
