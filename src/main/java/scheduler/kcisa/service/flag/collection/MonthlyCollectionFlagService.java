@@ -4,6 +4,8 @@ import org.springframework.stereotype.Service;
 import scheduler.kcisa.model.flag.collection.MonthlyCollectionFlag;
 import scheduler.kcisa.repo.flag.collection.MonthlyCollectionFlagRepository;
 
+import javax.transaction.Transactional;
+
 @Service
 public class MonthlyCollectionFlagService {
     private final MonthlyCollectionFlagRepository repository;
@@ -20,6 +22,7 @@ public class MonthlyCollectionFlagService {
         repository.save(flag);
     }
 
+    @Transactional
     public void deleteByDateAndTableName(String date, String tableName) {
         repository.deleteByDateAndTableName(date, tableName);
     }
@@ -28,3 +31,4 @@ public class MonthlyCollectionFlagService {
         return repository.findByDateAndTableName(date, tableName);
     }
 }
+
