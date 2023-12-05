@@ -154,7 +154,12 @@ JOIN (SELECT
             AND CTPRVN_CD = '11') AS SEOUL_POP) AS STD
      ON 1 = 1
 ON DUPLICATE KEY UPDATE
-	                 RASNG_CUTIN_CO             = VALUES(RASNG_CUTIN_CO)
+	                 BASE_YM                    = VALUES(BASE_YM)
+                 , BASE_YEAR                  = VALUES(BASE_YEAR)
+                 , BASE_MT                    = VALUES(BASE_MT)
+                 , CTPRVN_CD                  = VALUES(CTPRVN_CD)
+                 , CTPRVN_NM                  = VALUES(CTPRVN_NM)
+                 , RASNG_CUTIN_CO             = VALUES(RASNG_CUTIN_CO)
                  , PBLPRFR_CO                 = VALUES(PBLPRFR_CO)
                  , VIEWING_NMPR_CO            = VALUES(VIEWING_NMPR_CO)
                  , EXPNDTR_PRICE              = VALUES(EXPNDTR_PRICE)

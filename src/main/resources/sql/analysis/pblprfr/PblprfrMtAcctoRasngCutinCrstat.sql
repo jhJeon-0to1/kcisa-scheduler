@@ -89,7 +89,12 @@ WHERE
 GROUP by
 	BASE_YM
 ON DUPLICATE KEY UPDATE
-	                 PBLPRFR_CO                   = VALUES(PBLPRFR_CO)
+	                 BASE_YM                      = VALUES(BASE_YM)
+                 , BASE_YEAR                    = VALUES(BASE_YEAR)
+                 , BASE_MT                      = VALUES(BASE_MT)
+                 , CTPRVN_CD                    = VALUES(CTPRVN_CD)
+                 , CTPRVN_NM                    = VALUES(CTPRVN_NM)
+                 , PBLPRFR_CO                   = VALUES(PBLPRFR_CO)
                  , RASNG_CUTIN_CO               = VALUES(RASNG_CUTIN_CO)
                  , RASNG_CUTIN_RT               = VALUES(RASNG_CUTIN_RT)
                  , THTRE_RASNG_CUTIN_CO         = VALUES(THTRE_RASNG_CUTIN_CO)

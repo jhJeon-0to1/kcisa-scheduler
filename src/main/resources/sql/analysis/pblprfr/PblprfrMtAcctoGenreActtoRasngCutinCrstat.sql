@@ -4,14 +4,17 @@ INSERT INTO
  GENRE_CD, GENRE_NM, RASNG_CUTIN_CO)
 SELECT
 	BASE_YM
-, SUBSTR(BASE_YM, 1, 4) AS BASE_YEAR
-, SUBSTR(BASE_YM, 5, 2) AS BASE_MT
-, CTPRVN_CD             AS CTPRVN_CD
-, CTPRVN_NM             AS CTPRVN_NM
-, GENRE_CD              AS GENRE_CD
-, GENRE_NM              AS GENRE_NM
+, SUBSTR(BASE_YM, 1, 4)           AS BASE_YEAR
+, SUBSTR(BASE_YM, 5, 2)           AS BASE_MT
+, CTPRVN_CD                       AS CTPRVN_CD
+, (SELECT CTPRVN_NM
+   FROM ctprvn_info
+   WHERE
+	   LOCAL.CTPRVN_CD = CTPRVN_CD) AS CTPRVN_NM
+, GENRE_CD                        AS GENRE_CD
+, GENRE_NM                        AS GENRE_NM
 , RASNG_CUTIN_CO
-FROM colct_pblprfr_viewng_mt_accto_ctprvn_accto_stats
+FROM colct_pblprfr_viewng_mt_accto_ctprvn_accto_stats AS LOCAL
 WHERE
 	BASE_YM = ?
 UNION ALL
@@ -30,4 +33,11 @@ WHERE
 GROUP by
 	BASE_YM, GENRE_CD
 ON DUPLICATE KEY UPDATE
-	RASNG_CUTIN_CO = VALUES(RASNG_CUTIN_CO)
+	                 BASE_YM        = VALUES(BASE_YM)
+                 , BASE_YEAR      = VALUES(BASE_YEAR)
+                 , BASE_MT        = VALUES(BASE_MT)
+                 , CTPRVN_CD      = VALUES(CTPRVN_CD)
+                 , CTPRVN_NM      = VALUES(CTPRVN_NM)
+                 , GENRE_CD       = VALUES(GENRE_CD)
+                 , GENRE_NM       = VALUES(GENRE_NM)
+                 , RASNG_CUTIN_CO = VALUES(RASNG_CUTIN_CO)

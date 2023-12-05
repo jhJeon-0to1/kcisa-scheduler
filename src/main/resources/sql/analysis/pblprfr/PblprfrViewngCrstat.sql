@@ -128,7 +128,13 @@ WHERE
 GROUP BY
 	BASE_DE
 ON DUPLICATE KEY UPDATE
-	                 EXPNDTR_PRICE                = VALUES(EXPNDTR_PRICE)
+	                 BASE_DE                      = VALUES(BASE_DE)
+                 , BASE_YEAR                    = VALUES(BASE_YEAR)
+                 , BASE_MT                      = VALUES(BASE_MT)
+                 , BASE_DAY                     = VALUES(BASE_DAY)
+                 , CTPRVN_CD                    = VALUES(CTPRVN_CD)
+                 , CTPRVN_NM                    = VALUES(CTPRVN_NM)
+                 , EXPNDTR_PRICE                = VALUES(EXPNDTR_PRICE)
                  , VIEWNG_NMPR_CO               = VALUES(VIEWNG_NMPR_CO)
                  , SEAT_PER_EXPNDTR_PRICE       = VALUES(SEAT_PER_EXPNDTR_PRICE)
                  , POPLTN_PER_VIEWNG_NMPR_CO    = VALUES(POPLTN_PER_VIEWNG_NMPR_CO)
