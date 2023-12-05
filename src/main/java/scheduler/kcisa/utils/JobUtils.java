@@ -28,6 +28,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -74,7 +75,7 @@ public class JobUtils {
         String groupName = context.getJobDetail().getKey().getGroup();
         String jobName = context.getJobDetail().getKey().getName();
 
-        List<String> analysisTableList = Arrays.asList(tableName);
+        List<String> analysisTableList = Collections.singletonList(tableName);
 
         try (Connection connection = dataSource.getConnection()) {
             boolean isExist = checkAnalysisFlag(analysisTableList, flagDate, interval);

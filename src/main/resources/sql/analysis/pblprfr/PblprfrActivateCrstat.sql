@@ -74,14 +74,14 @@ FROM (SELECT
                FROM ctprvn_info AS C
                WHERE
 		               C.CTPRVN_CD =
-		               T.CTPRVN_CD)               AS CTPRVN_NM
-            , SUM(PBLPRFR_RASNG_CUTIN_CO)     AS PBLPRFR_RASNG_CUTIN_CO
-            , SUM(PBLPRFR_CO)                 AS PBLPRFR_CO
-            , SUM(PBLPRFR_VIEWNG_NMPR_CO)     AS PBLPRFR_VIEWNG_NMPR_CO
-            , SUM(PBLPRFR_SALES_PRICE) * 1000 AS PBLPRFR_SALES_PRICE
-            , SUM(PBLPRFR_RASNG_CUTIN_CO) /
+		               T.CTPRVN_CD)         AS CTPRVN_NM
+            , SUM(RASNG_CUTIN_CO)       AS PBLPRFR_RASNG_CUTIN_CO
+            , SUM(PBLPRFR_CO)           AS PBLPRFR_CO
+            , SUM(VIEWNG_NMPR_CO)       AS PBLPRFR_VIEWNG_NMPR_CO
+            , SUM(EXPNDTR_PRICE) * 1000 AS PBLPRFR_SALES_PRICE
+            , SUM(RASNG_CUTIN_CO) /
               SUM(PBLPRFR_CO) *
-              100                             AS RASNG_CUTIN_RATE
+              100                       AS RASNG_CUTIN_RATE
             FROM colct_pblprfr_viewng_mt_accto_ctprvn_accto_stats AS T
             WHERE
 	            BASE_YM = ?
@@ -106,15 +106,15 @@ FROM (SELECT
         1000          AS POPLTN_PER_EXPNDTR_PRICE
       FROM (SELECT
 	            BASE_YM
-            , '00'                            AS CTPRVN_CD
-            , '전국'                            AS CTPRVN_NM
-            , SUM(PBLPRFR_RASNG_CUTIN_CO)     AS PBLPRFR_RASNG_CUTIN_CO
-            , SUM(PBLPRFR_CO)                 AS PBLPRFR_CO
-            , SUM(PBLPRFR_VIEWNG_NMPR_CO)     AS PBLPRFR_VIEWNG_NMPR_CO
-            , SUM(PBLPRFR_SALES_PRICE) * 1000 AS PBLPRFR_SALES_PRICE
-            , SUM(PBLPRFR_RASNG_CUTIN_CO) /
+            , '00'                      AS CTPRVN_CD
+            , '전국'                      AS CTPRVN_NM
+            , SUM(RASNG_CUTIN_CO)       AS PBLPRFR_RASNG_CUTIN_CO
+            , SUM(PBLPRFR_CO)           AS PBLPRFR_CO
+            , SUM(VIEWNG_NMPR_CO)       AS PBLPRFR_VIEWNG_NMPR_CO
+            , SUM(EXPNDTR_PRICE) * 1000 AS PBLPRFR_SALES_PRICE
+            , SUM(RASNG_CUTIN_CO) /
               SUM(PBLPRFR_CO) *
-              100                             AS RASNG_CUTIN_RATE
+              100                       AS RASNG_CUTIN_RATE
             FROM colct_pblprfr_viewng_mt_accto_ctprvn_accto_stats
             WHERE
 	            BASE_YM = ?
@@ -136,10 +136,10 @@ JOIN (SELECT
         SEOUL_POP.POPLTN *
         1000             AS POPLTN_PER_EXPNDTR_PRICE
       FROM (SELECT
-	            SUM(PBLPRFR_RASNG_CUTIN_CO) / 12     AS PBLPRFR_RASNG_CUTIN_CO
-            , SUM(PBLPRFR_CO) / 12                 AS PBLPRFR_CO
-            , SUM(PBLPRFR_VIEWNG_NMPR_CO) / 12     AS PBLPRFR_VIEWNG_NMPR_CO
-            , SUM(PBLPRFR_SALES_PRICE) * 1000 / 12 AS PBLPRFR_SALES_PRICE
+	            SUM(RASNG_CUTIN_CO) / 12       AS PBLPRFR_RASNG_CUTIN_CO
+            , SUM(PBLPRFR_CO) / 12           AS PBLPRFR_CO
+            , SUM(VIEWNG_NMPR_CO) / 12       AS PBLPRFR_VIEWNG_NMPR_CO
+            , SUM(EXPNDTR_PRICE) * 1000 / 12 AS PBLPRFR_SALES_PRICE
             FROM colct_pblprfr_viewng_mt_accto_ctprvn_accto_stats
             WHERE
 	              BASE_YEAR = '2022'

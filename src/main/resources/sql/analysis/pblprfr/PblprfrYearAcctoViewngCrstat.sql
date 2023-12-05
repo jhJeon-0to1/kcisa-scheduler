@@ -10,19 +10,19 @@ INSERT INTO
  METRP_AREA_AT)
 SELECT
 	BASE_YEAR
-, CTPRVN_CD                       AS CTPRVN_CD
+, CTPRVN_CD                     AS CTPRVN_CD
 , (SELECT CTPRVN_NM
    FROM ctprvn_info
    WHERE
-	   B.CTPRVN_CD = CTPRVN_CD)     AS CTPRVN_NM
-, SUM(PBLPRFR_SALES_PRICE) * 1000 AS EXPNDTR_PRICE
-, SUM(PBLPRFR_VIEWNG_NMPR_CO)     AS VIEWNG_NMPR_CO
-, (CASE SUM(PBLPRFR_VIEWNG_NMPR_CO)
+	   B.CTPRVN_CD = CTPRVN_CD)   AS CTPRVN_NM
+, SUM(B.EXPNDTR_PRICE) * 1000   AS EXPNDTR_PRICE
+, SUM(B.VIEWNG_NMPR_CO)         AS VIEWNG_NMPR_CO
+, (CASE SUM(B.VIEWNG_NMPR_CO)
 	   WHEN 0 THEN 0
-	   ELSE IFNULL(SUM(PBLPRFR_SALES_PRICE) * 1000 /
-	               SUM(PBLPRFR_VIEWNG_NMPR_CO),
-	               0) END)          AS SEAT_PER_EXPNDTR_PRICE
-, SUM(PBLPRFR_VIEWNG_NMPR_CO) * 1000 / (
+	   ELSE IFNULL(SUM(B.EXPNDTR_PRICE) * 1000 /
+	               SUM(B.VIEWNG_NMPR_CO),
+	               0) END)        AS SEAT_PER_EXPNDTR_PRICE
+, SUM(VIEWNG_NMPR_CO) * 1000 / (
 	IFNULL(
 			(SELECT SUM(POPLTN_CO)
 			 FROM ctprvn_accto_popltn_info AS PP
@@ -41,29 +41,29 @@ SELECT
 			        P.CTPRVN_CD = B.CTPRVN_CD)
 		   GROUP BY PP.CTPRVN_CD, PP.BASE_YEAR)
 	)
-	)                               AS POPLTN_PER_VIEWNG_NMPR_CO
-, SUM(IF(GENRE_CD = 'AAAA', PBLPRFR_VIEWNG_NMPR_CO,
-         0))                      AS THTRE_VIEWNG_NMPR_CO
-, SUM(IF(GENRE_CD = 'GGGA', PBLPRFR_VIEWNG_NMPR_CO,
-         0))                      AS MUSICL_VIEWNG_NMPR_CO
-, SUM(IF(GENRE_CD = 'CCCA', PBLPRFR_VIEWNG_NMPR_CO,
-         0))                      AS CLSIC_VIEWNG_NMPR_CO
-, SUM(IF(GENRE_CD = 'CCCC', PBLPRFR_VIEWNG_NMPR_CO,
-         0))                      AS KCLSIC_VIEWNG_NMPR_CO
-, SUM(IF(GENRE_CD = 'CCCD', PBLPRFR_VIEWNG_NMPR_CO,
-         0))                      AS POPULAR_MUSIC_VIEWNG_NMPR_CO
-, SUM(IF(GENRE_CD = 'BBBC', PBLPRFR_VIEWNG_NMPR_CO,
-         0))                      AS DANCE_VIEWNG_NMPR_CO
-, SUM(IF(GENRE_CD = 'BBBE', PBLPRFR_VIEWNG_NMPR_CO,
-         0))                      AS POPULAR_DANCE_VIEWNG_NMPR_CO
-, SUM(IF(GENRE_CD = 'EEEB', PBLPRFR_VIEWNG_NMPR_CO,
-         0))                      AS CIRCUS_VIEWNG_NMPR_CO
-, SUM(IF(GENRE_CD = 'EEEA', PBLPRFR_VIEWNG_NMPR_CO,
-         0))                      AS COMPLEX_VIEWNG_NMPR_CO
+	)                             AS POPLTN_PER_VIEWNG_NMPR_CO
+, SUM(IF(GENRE_CD = 'AAAA', VIEWNG_NMPR_CO,
+         0))                    AS THTRE_VIEWNG_NMPR_CO
+, SUM(IF(GENRE_CD = 'GGGA', VIEWNG_NMPR_CO,
+         0))                    AS MUSICL_VIEWNG_NMPR_CO
+, SUM(IF(GENRE_CD = 'CCCA', VIEWNG_NMPR_CO,
+         0))                    AS CLSIC_VIEWNG_NMPR_CO
+, SUM(IF(GENRE_CD = 'CCCC', VIEWNG_NMPR_CO,
+         0))                    AS KCLSIC_VIEWNG_NMPR_CO
+, SUM(IF(GENRE_CD = 'CCCD', VIEWNG_NMPR_CO,
+         0))                    AS POPULAR_MUSIC_VIEWNG_NMPR_CO
+, SUM(IF(GENRE_CD = 'BBBC', VIEWNG_NMPR_CO,
+         0))                    AS DANCE_VIEWNG_NMPR_CO
+, SUM(IF(GENRE_CD = 'BBBE', VIEWNG_NMPR_CO,
+         0))                    AS POPULAR_DANCE_VIEWNG_NMPR_CO
+, SUM(IF(GENRE_CD = 'EEEB', VIEWNG_NMPR_CO,
+         0))                    AS CIRCUS_VIEWNG_NMPR_CO
+, SUM(IF(GENRE_CD = 'EEEA', VIEWNG_NMPR_CO,
+         0))                    AS COMPLEX_VIEWNG_NMPR_CO
 , (SELECT METRP_AT
    FROM ctprvn_info AS A
    WHERE
-	   A.CTPRVN_CD = B.CTPRVN_CD)   AS METRP_AT
+	   A.CTPRVN_CD = B.CTPRVN_CD) AS METRP_AT
 FROM colct_pblprfr_viewng_year_accto_ctprvn_accto_stats AS B
 WHERE
 	BASE_YEAR = ?
@@ -72,16 +72,16 @@ GROUP BY
 UNION ALL
 SELECT
 	BASE_YEAR
-, '00'                            AS CTPRVN_CD
-, '전국'                            AS CTPRVN_NM
-, SUM(PBLPRFR_SALES_PRICE) * 1000 AS EXPNDTR_PRICE
-, SUM(PBLPRFR_VIEWNG_NMPR_CO)     AS VIEWNG_NMPR_CO
-, (CASE SUM(PBLPRFR_VIEWNG_NMPR_CO)
+, '00'                        AS CTPRVN_CD
+, '전국'                        AS CTPRVN_NM
+, SUM(B.EXPNDTR_PRICE) * 1000 AS EXPNDTR_PRICE
+, SUM(VIEWNG_NMPR_CO)         AS VIEWNG_NMPR_CO
+, (CASE SUM(VIEWNG_NMPR_CO)
 	   WHEN 0 THEN 0
-	   ELSE IFNULL(SUM(PBLPRFR_SALES_PRICE) * 1000 /
-	               SUM(PBLPRFR_VIEWNG_NMPR_CO),
-	               0) END)          AS SEAT_PER_EXPNDTR_PRICE
-, SUM(PBLPRFR_VIEWNG_NMPR_CO) * 1000 / (
+	   ELSE IFNULL(SUM(B.EXPNDTR_PRICE) * 1000 /
+	               SUM(VIEWNG_NMPR_CO),
+	               0) END)      AS SEAT_PER_EXPNDTR_PRICE
+, SUM(VIEWNG_NMPR_CO) * 1000 / (
 	IFNULL(
 			(SELECT SUM(POPLTN_CO)
 			 FROM ctprvn_accto_popltn_info AS PP
@@ -100,26 +100,26 @@ SELECT
 			        P.CTPRVN_CD = '00')
 		   GROUP BY PP.CTPRVN_CD, PP.BASE_YEAR)
 	)
-	)                               AS POPLTN_PER_VIEWNG_NMPR_CO
-, SUM(IF(GENRE_CD = 'AAAA', PBLPRFR_VIEWNG_NMPR_CO,
-         0))                      AS THTRE_RASNG_CUTIN_CO
-, SUM(IF(GENRE_CD = 'GGGA', PBLPRFR_VIEWNG_NMPR_CO,
-         0))                      AS MUSICL_RASNG_CUTIN_CO
-, SUM(IF(GENRE_CD = 'CCCA', PBLPRFR_VIEWNG_NMPR_CO,
-         0))                      AS CLSIC_RASNG_CUTIN_CO
-, SUM(IF(GENRE_CD = 'CCCC', PBLPRFR_VIEWNG_NMPR_CO,
-         0))                      AS KCLSIC_RASNG_CUTIN_CO
-, SUM(IF(GENRE_CD = 'CCCD', PBLPRFR_VIEWNG_NMPR_CO,
-         0))                      AS POPULAR_MUSIC_RASNG_CUTIN_CO
-, SUM(IF(GENRE_CD = 'BBBC', PBLPRFR_VIEWNG_NMPR_CO,
-         0))                      AS DANCE_RASNG_CUTIN_CO
-, SUM(IF(GENRE_CD = 'BBBE', PBLPRFR_VIEWNG_NMPR_CO,
-         0))                      AS POPULAR_DANCE_RASNG_CUTIN_CO
-, SUM(IF(GENRE_CD = 'EEEB', PBLPRFR_VIEWNG_NMPR_CO,
-         0))                      AS CIRCUS_RASNG_CUTIN_CO
-, SUM(IF(GENRE_CD = 'EEEA', PBLPRFR_VIEWNG_NMPR_CO,
-         0))                      AS COMPLEX_RASNG_CUTIN_CO
-, 'N'                             AS METRP_AT
+	)                           AS POPLTN_PER_VIEWNG_NMPR_CO
+, SUM(IF(GENRE_CD = 'AAAA', VIEWNG_NMPR_CO,
+         0))                  AS THTRE_RASNG_CUTIN_CO
+, SUM(IF(GENRE_CD = 'GGGA', VIEWNG_NMPR_CO,
+         0))                  AS MUSICL_RASNG_CUTIN_CO
+, SUM(IF(GENRE_CD = 'CCCA', VIEWNG_NMPR_CO,
+         0))                  AS CLSIC_RASNG_CUTIN_CO
+, SUM(IF(GENRE_CD = 'CCCC', VIEWNG_NMPR_CO,
+         0))                  AS KCLSIC_RASNG_CUTIN_CO
+, SUM(IF(GENRE_CD = 'CCCD', VIEWNG_NMPR_CO,
+         0))                  AS POPULAR_MUSIC_RASNG_CUTIN_CO
+, SUM(IF(GENRE_CD = 'BBBC', VIEWNG_NMPR_CO,
+         0))                  AS DANCE_RASNG_CUTIN_CO
+, SUM(IF(GENRE_CD = 'BBBE', VIEWNG_NMPR_CO,
+         0))                  AS POPULAR_DANCE_RASNG_CUTIN_CO
+, SUM(IF(GENRE_CD = 'EEEB', VIEWNG_NMPR_CO,
+         0))                  AS CIRCUS_RASNG_CUTIN_CO
+, SUM(IF(GENRE_CD = 'EEEA', VIEWNG_NMPR_CO,
+         0))                  AS COMPLEX_RASNG_CUTIN_CO
+, 'N'                         AS METRP_AT
 FROM colct_pblprfr_viewng_year_accto_ctprvn_accto_stats AS B
 WHERE
 	BASE_YEAR = ?

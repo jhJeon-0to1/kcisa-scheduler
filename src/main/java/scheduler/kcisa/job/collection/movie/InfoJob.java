@@ -12,12 +12,15 @@ import scheduler.kcisa.model.flag.collection.MonthlyCollectionFlag;
 import scheduler.kcisa.service.SchedulerLogService;
 import scheduler.kcisa.service.flag.collection.MonthlyCollectionFlagService;
 import scheduler.kcisa.utils.JobUtils;
+import scheduler.kcisa.utils.ScheduleInterval;
 import scheduler.kcisa.utils.Utils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -44,7 +47,7 @@ public class InfoJob extends QuartzJobBean {
             SchedulerLogService schedulerLogService = (SchedulerLogService) jobData.logService;
 
             String insertQuery = Utils.getSQLString("src/main/resources/sql/collection/movie/Info.sql");
-            try (PreparedStatement pstmt = connection.prepareStatement(insertQuery);) {
+            try (PreparedStatement pstmt = connection.prepareStatement(insertQuery)) {
                 String year = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy"));
 
                 int page = 1;
@@ -98,7 +101,12 @@ public class InfoJob extends QuartzJobBean {
 
                 schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count.get(), count.get() - updtCount.get(), updtCount.get()));
 
-                flagService.create(new MonthlyCollectionFlag(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM")), tableName, true));
+                String flagDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
+                String isExist = JobUtils.checkCollectFlag(new ArrayList<>(Collections.singletonList(tableName)), flagDate, ScheduleInterval.MONTHLY);
+                if (isExist != null) {
+                    flagService.delete(flagService.findByDateAndTableName(flagDate, tableName));
+                }
+                flagService.create(new MonthlyCollectionFlag(flagDate, tableName, true));
             }
         });
     }

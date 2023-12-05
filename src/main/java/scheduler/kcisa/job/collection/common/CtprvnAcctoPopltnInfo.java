@@ -24,9 +24,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Component
 public class CtprvnAcctoPopltnInfo extends QuartzJobBean {
@@ -94,7 +92,7 @@ public class CtprvnAcctoPopltnInfo extends QuartzJobBean {
         String jobName = jobExecutionContext.getJobDetail().getKey().getName();
 
         String tableName = "ctprvn_accto_popltn_info";
-        List<String> checkList = Arrays.asList(tableName);
+        List<String> checkList = new ArrayList<>(Collections.singletonList(tableName));
 
         try (Connection connection = dataSource.getConnection()) {
             String existTable = JobUtils.checkCollectFlag(checkList, LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")), ScheduleInterval.DAILY);
@@ -111,7 +109,7 @@ public class CtprvnAcctoPopltnInfo extends QuartzJobBean {
 
             String insertQuery = "INSERT INTO analysis_etl.ctprvn_accto_popltn_info (BASE_YM, BASE_YEAR, BASE_MT, CTPRVN_CD, CTPRVN_NM, POPLTN_CO, COLCT_DE) VALUES (?, ?, ?, ?, (SELECT C.CTPRVN_NM FROM ctprvn_info AS C WHERE C.CTPRVN_CD = ?), ?, DATE_FORMAT(NOW(), '%Y%m%d')) ON DUPLICATE KEY UPDATE popltn_co = VALUES(popltn_co), UPDT_DE = DATE_FORMAT(NOW(), '%Y%m%d')";
 
-            try (PreparedStatement pstmt = connection.prepareStatement(insertQuery);) {
+            try (PreparedStatement pstmt = connection.prepareStatement(insertQuery)) {
                 for (LocalDate date = startDate; date.isBefore(endDate.plusMonths(1)); date = date.plusMonths(1)) {
                     String year = date.format(DateTimeFormatter.ofPattern("yyyy"));
                     String month = date.format(DateTimeFormatter.ofPattern("MM"));
