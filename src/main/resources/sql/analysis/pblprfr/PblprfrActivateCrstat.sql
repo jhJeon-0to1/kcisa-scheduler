@@ -36,17 +36,17 @@ SELECT
       STD.POPLTN_PER_EXPNDTR_PRICE *
       100)) / 2                      AS GNRLZ_SCORE
 , (SELECT LRGE_THEAT_CO
-   FROM pblprfr_fclty_crstat AS F
+   FROM analysis_model.pblprfr_fclty_crstat AS F
    WHERE
 	     DATA.BASE_YM = F.BASE_YM
    AND DATA.CTPRVN_CD = F.CTPRVN_CD) AS LRGE_THEAT_CO
 , (SELECT MIDDL_THEAT_CO
-   FROM pblprfr_fclty_crstat AS F
+   FROM analysis_model.pblprfr_fclty_crstat AS F
    WHERE
 	     DATA.BASE_YM = F.BASE_YM
    AND DATA.CTPRVN_CD = F.CTPRVN_CD) AS MIDDL_THEAT_CO
 , (SELECT SMALL_THEAT_CO
-   FROM pblprfr_fclty_crstat AS F
+   FROM analysis_model.pblprfr_fclty_crstat AS F
    WHERE
 	     DATA.BASE_YM = F.BASE_YM
    AND DATA.CTPRVN_CD = F.CTPRVN_CD) AS SMALL_THEAT_CO
