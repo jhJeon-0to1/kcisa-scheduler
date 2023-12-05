@@ -47,16 +47,13 @@ public class PblprfrFcltyDetailInfo extends QuartzJobBean {
     protected Boolean checkAlreadyCollect() {
         String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
         MonthlyCollectionFlag flag = flagService.findByDateAndTableName(date, "colct_pblprfr_fclty_detail_info");
-        if (flag != null) {
-            return true;
-        }
-        return false;
+        return flag != null;
     }
 
     protected ArrayList<String> getFcltyId(String date, Connection connection) throws Exception {
         String selectIDQuery = "SELECT PBLPRFR_FCLTY_ID FROM colct_pblprfr_fclty_info WHERE COLCT_YM = ?";
 
-        try (PreparedStatement selectIDPstmt = connection.prepareStatement(selectIDQuery);) {
+        try (PreparedStatement selectIDPstmt = connection.prepareStatement(selectIDQuery)) {
             selectIDPstmt.setString(1, date);
 
             ResultSet rs = selectIDPstmt.executeQuery();
@@ -91,11 +88,11 @@ public class PblprfrFcltyDetailInfo extends QuartzJobBean {
             checkFcltyCollect();
 
             ArrayList<String> idList = getFcltyId(date, connection);
-            System.out.println("idList: " + idList);
+
 
             String insertQuery = "INSERT INTO colct_pblprfr_fclty_detail_info (PBLPRFR_FCLTY_ID,PBLPRFR_FCLTY_NM,PRFPLC_CO,FCLTY_CHARTR,OPNNG_YEAR,FCLTY_SEAT_CO,FCLTY_TEL_NO,FCLTY_URL,FCLTY_ADDR,FCLTY_LA,FLCTY_LO,COLCT_YM) VALUES (?,?,?,?,?,?,?,?,?,?,?,DATE_FORMAT(NOW(), '%Y%m')) ON DUPLICATE KEY UPDATE PBLPRFR_FCLTY_NM=VALUES(PBLPRFR_FCLTY_NM),PRFPLC_CO=VALUES(PRFPLC_CO),FCLTY_CHARTR=VALUES(FCLTY_CHARTR),OPNNG_YEAR=VALUES(OPNNG_YEAR),FCLTY_SEAT_CO=VALUES(FCLTY_SEAT_CO),FCLTY_TEL_NO=VALUES(FCLTY_TEL_NO),FCLTY_URL=VALUES(FCLTY_URL),FCLTY_ADDR=VALUES(FCLTY_ADDR),FCLTY_LA=VALUES(FCLTY_LA),FLCTY_LO=VALUES(FLCTY_LO),UPDT_YM=DATE_FORMAT(NOW(), '%Y%m')";
 
-            try (PreparedStatement pstmt = connection.prepareStatement(insertQuery);) {
+            try (PreparedStatement pstmt = connection.prepareStatement(insertQuery)) {
                 for (String id : idList) {
                     String response = webClient.get().uri("/" + id + "?service=" + key).retrieve().bodyToMono(String.class)
                             .block();

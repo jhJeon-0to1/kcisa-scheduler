@@ -118,7 +118,7 @@ public class PetRegistCrstatCollect extends QuartzJobBean {
             tempData.add(temp);
 
             String sql = Utils.getSQLString("src/main/resources/sql/collection/pet/PetRegistCrstat.sql");
-            try (PreparedStatement pstmt = jobData.conn.prepareStatement(sql);) {
+            try (PreparedStatement pstmt = jobData.conn.prepareStatement(sql)) {
                 int insertCount = 0;
                 for (JsonNode tempRow : tempData) {
                     String ctprvn_nm = tempRow.get("ctprvn_nm").asText();
@@ -152,7 +152,7 @@ public class PetRegistCrstatCollect extends QuartzJobBean {
                 }
                 jobData.logService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, insertCount, insertCount - updt_count.get(), updt_count.get()));
 
-                flagService.create(new MonthlyCollectionFlag(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy")), tableName, true));
+                flagService.create(new MonthlyCollectionFlag(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM")), tableName, true));
             }
         });
     }

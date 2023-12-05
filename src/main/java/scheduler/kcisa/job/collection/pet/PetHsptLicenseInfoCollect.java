@@ -42,7 +42,7 @@ public class PetHsptLicenseInfoCollect extends QuartzJobBean {
             JsonNode response = PetCollection.getPetData(url, "src/main/resources/data/pet/", stdDateStr + "_PetHsptLicenseInfo.zip", stdDateStr + "_PetHsptLicenseInfo.csv");
 
             String sql = Utils.getSQLString("src/main/resources/sql/collection/pet/PetHsptLicenseInfo.sql");
-            try (PreparedStatement pstmt = jobData.conn.prepareStatement(sql);) {
+            try (PreparedStatement pstmt = jobData.conn.prepareStatement(sql)) {
                 ObjectMapper mapper = new ObjectMapper();
                 response.fields().forEachRemaining(entry -> {
                     try {
@@ -73,7 +73,7 @@ public class PetHsptLicenseInfoCollect extends QuartzJobBean {
 
                 System.out.println(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + " 동물병원 수집 완료");
 
-                flagService.create(new MonthlyCollectionFlag(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy")), tableName, true));
+                flagService.create(new MonthlyCollectionFlag(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM")), tableName, true));
             }
         });
     }

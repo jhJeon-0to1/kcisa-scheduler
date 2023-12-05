@@ -104,7 +104,7 @@ public class InfoJob extends QuartzJobBean {
                 String flagDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
                 String isExist = JobUtils.checkCollectFlag(new ArrayList<>(Collections.singletonList(tableName)), flagDate, ScheduleInterval.MONTHLY);
                 if (isExist != null) {
-                    flagService.delete(flagService.findByDateAndTableName(flagDate, tableName));
+                    flagService.deleteByDateAndTableName(flagDate, tableName);
                 }
                 flagService.create(new MonthlyCollectionFlag(flagDate, tableName, true));
             }

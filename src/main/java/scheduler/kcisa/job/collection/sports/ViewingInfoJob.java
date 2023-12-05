@@ -76,7 +76,7 @@ public class ViewingInfoJob extends QuartzJobBean {
 
             String inputQuery = Utils.getSQLString("src/main/resources/sql/collection/sports/ViewngInfoJob.sql");
 
-            try (PreparedStatement pstmt = connection.prepareStatement(inputQuery);) {
+            try (PreparedStatement pstmt = connection.prepareStatement(inputQuery)) {
                 for (Code code : codeList) {
                     String regionCode = code.region;
 

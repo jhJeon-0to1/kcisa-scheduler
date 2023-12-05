@@ -20,8 +20,8 @@ public class MonthlyCollectionFlagService {
         repository.save(flag);
     }
 
-    public void delete(MonthlyCollectionFlag flag) {
-        repository.delete(flag);
+    public void deleteByDateAndTableName(String date, String tableName) {
+        repository.deleteByDateAndTableName(date, tableName);
     }
 
     public MonthlyCollectionFlag findByDateAndTableName(String date, String tableName) {
