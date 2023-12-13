@@ -23,7 +23,8 @@ import java.util.List;
 
 @Component
 public class MtAcctoViewngCrstatJob extends QuartzJobBean {
-    List<String> checkList = new ArrayList<>(Arrays.asList("ctprvn_accto_popltn_info", "colct_sports_viewng_info"));
+    List<String> checkList = new ArrayList<>(Arrays.asList("ctprvn_accto_popltn_info"));
+    List<String> checkDataList = new ArrayList<>(Arrays.asList("colct_sports_viewng_info"));
     MonthlyAnalysisFlagService flagService;
     String tableName = "SPORTS_MT_ACCTO_VIEWNG_CRSTAT".toLowerCase();
 
@@ -34,6 +35,8 @@ public class MtAcctoViewngCrstatJob extends QuartzJobBean {
     @Override
     protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
         LocalDate stdDate = LocalDate.now().minusMonths(1);
+        LocalDate startDate = stdDate.withDayOfMonth(1);
+        LocalDate endDate = stdDate.withDayOfMonth(stdDate.lengthOfMonth());
         String stdYear = stdDate.format(DateTimeFormatter.ofPattern("yyyy"));
         String stdMonth = stdDate.format(DateTimeFormatter.ofPattern("MM"));
         String flagDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
@@ -43,6 +46,15 @@ public class MtAcctoViewngCrstatJob extends QuartzJobBean {
             MartSchedulerLogService logService = (MartSchedulerLogService) jobData.logService;
 
             String query = Utils.getSQLString("src/main/resources/sql/analysis/sports/MtAcctoViewngCrstat.sql");
+
+            for (LocalDate date = startDate; date.isBefore(endDate.plusDays(1)); date = date.plusDays(1)) {
+                String dateStr = date.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+                String checkName = JobUtils.checkCollectFlag(checkDataList, dateStr, ScheduleInterval.DAILY);
+                if (checkName != null) {
+                    logService.create(new MartSchedulerLog(jobData.groupName, jobData.jobName, tableName, SchedulerStatus.FAILED, checkName + " " + dateStr + "의 데이터" + "수집이 완료되지 않았습니다."));
+                    return;
+                }
+            }
 
             try (PreparedStatement pstmt = connection.prepareStatement(query);) {
                 pstmt.setString(1, stdYear);

@@ -25,7 +25,7 @@ import java.util.List;
 public class PblprfrActivateCrstatJob extends QuartzJobBean {
     MonthlyAnalysisFlagService flagService;
 
-    String tableName = "pbprfr_activate_crstat";
+    String tableName = "pblprfr_activate_crstat";
     List<String> colctList = new ArrayList<>(Arrays.asList("ctprvn_accto_popltn_info", "colct_pblprfr_viewng_mt_accto_ctprvn_accto_stats"));
     List<String> analysisList = new ArrayList<>(Arrays.asList("pblprfr_fclty_crstat"));
 

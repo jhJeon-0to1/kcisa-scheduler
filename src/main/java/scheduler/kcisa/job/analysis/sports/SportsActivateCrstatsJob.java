@@ -23,7 +23,8 @@ import java.util.List;
 
 @Component
 public class SportsActivateCrstatsJob extends QuartzJobBean {
-    List<String> checkList = new ArrayList<>(Arrays.asList("ctprvn_accto_popltn_info", "colct_sports_viewng_info"));
+    List<String> checkList = new ArrayList<>(Arrays.asList("ctprvn_accto_popltn_info"));
+    List<String> checkDataList = new ArrayList<>(Arrays.asList("colct_sports_viewng_info"));
     MonthlyAnalysisFlagService flagService;
     String tableName = "SPORTS_ACTIVATE_CRSTAT".toLowerCase();
 
@@ -39,10 +40,18 @@ public class SportsActivateCrstatsJob extends QuartzJobBean {
         String startDateStr = startDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String endDateStr = endDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String flagDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
-
         JobUtils.executeAnalysisJob(context, tableName, checkList, flagDate, ScheduleInterval.MONTHLY, jobData -> {
             Connection connection = jobData.conn;
             MartSchedulerLogService logService = (MartSchedulerLogService) jobData.logService;
+
+            for (LocalDate date = startDate; date.isBefore(endDate.plusDays(1)); date = date.plusDays(1)) {
+                String dateStr = date.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+                String checkName = JobUtils.checkCollectFlag(checkDataList, dateStr, ScheduleInterval.DAILY);
+                if (checkName != null) {
+                    logService.create(new MartSchedulerLog(jobData.groupName, jobData.jobName, tableName, SchedulerStatus.FAILED, checkName + " " + dateStr + "의 데이터" + "수집이 완료되지 않았습니다."));
+                    return;
+                }
+            }
 
             String query = Utils.getSQLString("src/main/resources/sql/analysis/sports/SportsActivateCrstats.sql");
 

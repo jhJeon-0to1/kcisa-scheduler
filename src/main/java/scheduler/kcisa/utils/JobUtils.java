@@ -27,7 +27,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -175,9 +174,10 @@ public class JobUtils {
     //    ctprvn_accto_popltn_info flag가 있는지 확인
 //    있으면 true, 없으면 false
     public static boolean checkPopltn() {
-        String flagDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String flagDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
         MonthlyCollectionFlag flag = monthlyCollectionFlagService.findByDateAndTableName(flagDate, "ctprvn_accto_popltn_info");
 //        ctprvn_accto_popltn_info flag가 없으면 false
+//        flag가
         return flag != null;
     }
 

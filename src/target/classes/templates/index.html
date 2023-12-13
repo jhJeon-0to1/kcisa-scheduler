@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+          name="viewport">
+    <meta content="ie=edge" http-equiv="X-UA-Compatible">
+    <title>스케쥴러</title>
+    <style>
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+            padding: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+<h1>스케쥴러</h1>
+<script>
+    const url = "/api/jobs";
+
+    const onTrigger = (groupName, jobName) => {
+        const url = '/api/jobs/simple'
+
+        const data = {
+            groupName: groupName,
+            jobName: jobName
+        }
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        }).then(async response => {
+            if (response.ok) {
+                window.alert('성공')
+            } else {
+                const data = await response.json()
+                window.alert(data)
+            }
+        })
+    }
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            const collectionList = data.filter(d => d.jobName.includes("수집")).sort((a, b) => a.groupName.localeCompare(b.groupName))
+            const otherList = data.filter(d => !d.jobName.includes("수집")).sort((a, b) => a.groupName.localeCompare(b.groupName))
+
+            const collectionTable = document.querySelector("#collection tbody");
+            const otherTable = document.querySelector("#other tbody");
+
+            collectionList.forEach(d => {
+                const tr = document.createElement("tr");
+                const td1 = document.createElement("td");
+                const td2 = document.createElement("td");
+                const td4 = document.createElement("td");
+                const td5 = document.createElement("td");
+
+                td1.textContent = d.groupName;
+                td2.textContent = d.jobName;
+                td4.textContent = d.cronExpression;
+
+                const button = document.createElement("button");
+                button.textContent = "실행";
+                button.addEventListener('click', () => {
+                    onTrigger(d.groupName, d.jobName)
+                })
+                td5.appendChild(button);
+
+                tr.appendChild(td1);
+                tr.appendChild(td2);
+                tr.appendChild(td4);
+                tr.appendChild(td5);
+
+                collectionTable.appendChild(tr);
+            });
+
+            otherList.forEach(d => {
+                const tr = document.createElement("tr");
+                const td1 = document.createElement("td");
+                const td2 = document.createElement("td");
+                const td4 = document.createElement("td");
+                const td5 = document.createElement("td");
+
+                td1.textContent = d.groupName;
+                td2.textContent = d.jobName;
+                td4.textContent = d.cronExpression;
+
+                const button = document.createElement("button");
+                button.textContent = "실행";
+                button.addEventListener('click', () => {
+                    onTrigger(d.groupName, d.jobName)
+                })
+                td5.appendChild(button);
+
+                tr.appendChild(td1);
+                tr.appendChild(td2);
+                tr.appendChild(td4);
+                tr.appendChild(td5);
+
+                otherTable.appendChild(tr);
+            });
+        });
+</script>
+<a href="/collection/log">수집 로그</a>
+<a href="/analysis/log">분석 로그</a>
+<div>
+    <h2>수집</h2>
+    <table id="collection">
+        <thead>
+        <tr>
+            <th>그룹 명</th>
+            <th>작업명</th>
+            <th>스케쥴 시간</th>
+            <th>실행</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        </tbody>
+    </table>
+</div>
+<div>
+    <h2>분석</h2>
+    <table id="other">
+        <thead>
+        <tr>
+            <th>그룹 명</th>
+            <th>작업명</th>
+            <th>스케쥴 시간</th>
+            <th>실행</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

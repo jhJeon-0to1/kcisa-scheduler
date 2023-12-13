@@ -73,8 +73,8 @@ FROM (SELECT
             , (SELECT CTPRVN_NM
                FROM ctprvn_info AS C
                WHERE
-	               C.CTPRVN_CD =
-	               T.CTPRVN_CD)           AS CTPRVN_NM
+		               C.CTPRVN_CD =
+		               T.CTPRVN_CD)         AS CTPRVN_NM
             , SUM(RASNG_CUTIN_CO)       AS PBLPRFR_RASNG_CUTIN_CO
             , SUM(PBLPRFR_CO)           AS PBLPRFR_CO
             , SUM(VIEWNG_NMPR_CO)       AS PBLPRFR_VIEWNG_NMPR_CO
@@ -122,7 +122,7 @@ FROM (SELECT
 	            BASE_YM)              AS NATION
       JOIN ctprvn_accto_popltn_info AS POP
            ON
-	           NATION.BASE_YM = POP.BASE_YM
+			           NATION.BASE_YM = POP.BASE_YM
 		           AND POP.CTPRVN_CD = '00')        AS DATA
 JOIN (SELECT
 	      SEOUL.PBLPRFR_RASNG_CUTIN_CO
