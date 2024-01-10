@@ -24,7 +24,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 @Component
 public class CtprvnAcctoPopltnInfo extends QuartzJobBean {
@@ -95,8 +98,10 @@ public class CtprvnAcctoPopltnInfo extends QuartzJobBean {
         List<String> checkList = new ArrayList<>(Collections.singletonList(tableName));
 
         try (Connection connection = dataSource.getConnection()) {
-            String existTable = JobUtils.checkCollectFlag(checkList, LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")), ScheduleInterval.DAILY);
-            if (existTable != null) {
+            String existTable = JobUtils.checkCollectFlag(checkList, LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM")), ScheduleInterval.MONTHLY);
+            System.out.println("existTable: " + existTable + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM")));
+            if (existTable == null) {
+                // 수집이 필요한 경우가 existTable이 null이 아닌 경우이므로 null이 아니라면 수집을 실시 null이면 수집이 완료된 것이므로 수집을 실시하지 않음.
                 System.out.println(existTable + " 테이블은 이미 수집 완료 되었습니다.");
                 return;
             }

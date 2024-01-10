@@ -21,6 +21,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -40,6 +42,9 @@ public class MtAcctoSalesStatsJob extends QuartzJobBean {
         LocalDate stdDate = LocalDate.now();
         String dateStr = stdDate.toString().replace("-", "");
         String year = dateStr.substring(0, 4);
+        String lastYear = String.valueOf(Integer.parseInt(year) - 1);
+
+        ArrayList<String> yearList = new ArrayList<>(Arrays.asList(year, lastYear));
 
         AtomicInteger count = new AtomicInteger();
         JobUtils.executeJob(context, tableName, jobData -> {
@@ -50,38 +55,40 @@ public class MtAcctoSalesStatsJob extends QuartzJobBean {
 
             String query = Utils.getSQLString("src/main/resources/sql/collection/movie/MtAcctoSalesStats.sql");
             try (PreparedStatement pstmt = connection.prepareStatement(query);) {
-                String formData = "loadVal=0&searchType=search&selectYear=" + year;
-                String response = webClient.post().uri("/kobis/business/stat/them/findMonthlyTotalList.do").contentType(MediaType.APPLICATION_FORM_URLENCODED).bodyValue(formData).retrieve().bodyToMono(String.class).block();
+                for (String s : yearList) {
+                    String formData = "loadVal=0&searchType=search&selectYear=" + s;
+                    String response = webClient.post().uri("/kobis/business/stat/them/findMonthlyTotalList.do").contentType(MediaType.APPLICATION_FORM_URLENCODED).bodyValue(formData).retrieve().bodyToMono(String.class).block();
 
-                if (response == null) {
-                    schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, "response is null"));
-                    return;
-                }
-
-                Document html = Jsoup.parse(response);
-                List<Element> rows = html.select("tbody > tr");
-
-                for (Element row : rows) {
-                    List<Element> cells = row.select("td");
-                    if (cells.get(0).text().equals("합계")) {
-                        continue;
+                    if (response == null) {
+                        schedulerLogService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.FAILED, "response is null"));
+                        return;
                     }
-                    String date = cells.get(0).text().replace("-", "");
-                    BigDecimal allOpening = new BigDecimal(cells.get(11).text().replace(",", ""));
-                    BigDecimal allCount = new BigDecimal(cells.get(12).text().replace(",", ""));
-                    BigDecimal allAmount = new BigDecimal(cells.get(13).text().replace(",", ""));
-                    BigDecimal allPeople = new BigDecimal(cells.get(14).text().replace(",", ""));
 
-                    pstmt.setString(1, date);
-                    pstmt.setString(2, date.substring(0, 4));
-                    pstmt.setString(3, date.substring(4, 6));
-                    pstmt.setBigDecimal(4, allOpening);
-                    pstmt.setBigDecimal(5, allCount);
-                    pstmt.setBigDecimal(6, allAmount);
-                    pstmt.setBigDecimal(7, allPeople);
+                    Document html = Jsoup.parse(response);
+                    List<Element> rows = html.select("tbody > tr");
 
-                    pstmt.addBatch();
-                    count.getAndIncrement();
+                    for (Element row : rows) {
+                        List<Element> cells = row.select("td");
+                        if (cells.get(0).text().equals("합계")) {
+                            continue;
+                        }
+                        String date = cells.get(0).text().replace("-", "");
+                        BigDecimal allOpening = new BigDecimal(cells.get(11).text().replace(",", ""));
+                        BigDecimal allCount = new BigDecimal(cells.get(12).text().replace(",", ""));
+                        BigDecimal allAmount = new BigDecimal(cells.get(13).text().replace(",", ""));
+                        BigDecimal allPeople = new BigDecimal(cells.get(14).text().replace(",", ""));
+
+                        pstmt.setString(1, date);
+                        pstmt.setString(2, date.substring(0, 4));
+                        pstmt.setString(3, date.substring(4, 6));
+                        pstmt.setBigDecimal(4, allOpening);
+                        pstmt.setBigDecimal(5, allCount);
+                        pstmt.setBigDecimal(6, allAmount);
+                        pstmt.setBigDecimal(7, allPeople);
+
+                        pstmt.addBatch();
+                        count.getAndIncrement();
+                    }
                 }
                 pstmt.executeBatch();
 

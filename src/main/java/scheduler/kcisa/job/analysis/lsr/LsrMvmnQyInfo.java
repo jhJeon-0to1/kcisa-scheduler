@@ -36,9 +36,11 @@ public class LsrMvmnQyInfo extends QuartzJobBean {
             MartSchedulerLogService logService = (MartSchedulerLogService) jobData.logService;
 
             String query = Utils.getSQLString("src/main/resources/sql/analysis/lsr/LsrMvmnQyInfo.sql");
+            String irdsQuery = Utils.getSQLString("src/main/resources/sql/analysis/lsr/LsrMvmnQyIrdsRt.sql");
 
-            try (PreparedStatement pstmt = conn.prepareStatement(query);) {
+            try (PreparedStatement pstmt = conn.prepareStatement(query); PreparedStatement IrdsPstmt = conn.prepareStatement(irdsQuery);) {
                 int count = pstmt.executeUpdate();
+                IrdsPstmt.executeUpdate();
 
                 logService.create(new MartSchedulerLog(jobData.groupName, jobData.jobName, tableName, SchedulerStatus.SUCCESS, count));
 

@@ -65,7 +65,7 @@ public class LsrExpndtrStdizInfo extends QuartzJobBean {
             try (PreparedStatement pstmt = conn.prepareStatement(query);) {
                 for (LsrCtprvn.Ctprvn city : ctprvnList) {
                     for (LsrInduty induty : indutyList) {
-                        String formData = "indcr_id=1&mode=&initId=&val1=" + city.getCode() + ((induty.getCode().equals("")) ? "" : "&cd2=A00029&val2=" + induty.getCode());
+                        String formData = "indcr_id=1&wklId=0&mode=&initId=&val1=" + city.getCode() + ((induty.getCode().equals("")) ? "" : "&cd2=A00029&val2=" + induty.getCode());
 
                         JsonNode response = webClient.post()
                                 .uri(url)

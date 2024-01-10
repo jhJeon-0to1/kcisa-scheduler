@@ -63,7 +63,7 @@ public class LstMvmnQyInfo extends QuartzJobBean {
             try (PreparedStatement pstmt = conn.prepareStatement(sql);) {
                 for (LsrCtprvn.Ctprvn city : ctprvnList) {
                     for (Dstrct district : dstrctList) {
-                        String formData = "indcr_id=19&mode=&initId=&val1=" + city.getCode() + (district.getCode().equals("") ? "" : "&cd2=A00011&val2=" + district.getCode());
+                        String formData = "indcr_id=19&wklId=0&mode=&initId=&val1=" + city.getCode() + (district.getCode().equals("") ? "" : "&cd2=A00011&val2=" + district.getCode());
 
                         JsonNode response = webClient.post()
                                 .uri(url)

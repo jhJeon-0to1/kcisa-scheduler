@@ -13,7 +13,7 @@ SELECT
 , a.DSTRCT_TY_CD
 , a.DSTRCT_TY_NM
 , a.MVMN_QY
-, (a.MVMN_QY - b.MVMN_QY) / a.MVMN_QY *
+, (a.MVMN_QY - b.MVMN_QY) / b.MVMN_QY *
   100 as MVMN_QY_IRDS_RT
 FROM analysis_model.lsr_mvmn_qy_info AS a
 JOIN analysis_model.lsr_mvmn_qy_info AS b

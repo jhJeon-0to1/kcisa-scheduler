@@ -35,9 +35,11 @@ public class LsrExpndtrStdizInfo extends QuartzJobBean {
             Connection conn = jobData.conn;
             MartSchedulerLogService logService = (MartSchedulerLogService) jobData.logService;
             String query = Utils.getSQLString("src/main/resources/sql/analysis/lsr/LsrExpndtrStdizInfo.sql");
+            String irdsQuery = Utils.getSQLString("src/main/resources/sql/analysis/lsr/LsrExpndtrStdizIrdsRt.sql");
 
-            try (PreparedStatement pstmt = conn.prepareStatement(query);) {
+            try (PreparedStatement pstmt = conn.prepareStatement(query); PreparedStatement IrdsPstmt = conn.prepareStatement(irdsQuery);) {
                 int count = pstmt.executeUpdate();
+                IrdsPstmt.executeUpdate();
 
                 logService.create(new MartSchedulerLog(jobData.groupName, jobData.jobName, tableName, SchedulerStatus.SUCCESS, count));
 

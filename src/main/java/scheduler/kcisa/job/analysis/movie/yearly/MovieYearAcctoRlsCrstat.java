@@ -19,11 +19,13 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @Component
 public class MovieYearAcctoRlsCrstat extends QuartzJobBean {
-    List<String> checkList = new ArrayList<>(Arrays.asList("colct_movie_year_accto_ctprvn_accto_stats", "colct_movie_year_accto_sales_stats", "colct_movie_info"));
+    List<String> checkList = new ArrayList<>(Arrays.asList("colct_movie_year_accto_ctprvn_accto_stats", "colct_movie_year_accto_sales_stats"));
+    List<String> movieCheckList = new ArrayList<>(Collections.singletonList("colct_movie_info"));
     YearlyAnalysisFlagService flagService;
     String tableName = "MOVIE_YEAR_ACCTO_RLS_CRSTAT".toLowerCase();
 
@@ -36,6 +38,12 @@ public class MovieYearAcctoRlsCrstat extends QuartzJobBean {
         LocalDate stdDate = LocalDate.now().minusYears(1);
         String stdDateStr = stdDate.format(DateTimeFormatter.ofPattern("yyyy"));
         String flagDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy"));
+        String movieFlagDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
+
+        String movieTableName = JobUtils.checkCollectFlag(movieCheckList, movieFlagDate, ScheduleInterval.MONTHLY);
+        if (movieTableName != null) {
+            throw new JobExecutionException("colct_movie_info가 수집되지 않았습니다.");
+        }
 
         JobUtils.executeAnalysisJob(context, tableName, checkList, flagDate, ScheduleInterval.YEARLY, jobData -> {
             Connection connection = jobData.conn;

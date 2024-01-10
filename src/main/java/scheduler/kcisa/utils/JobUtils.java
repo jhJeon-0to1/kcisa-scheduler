@@ -106,7 +106,7 @@ public class JobUtils {
             tableList.remove("ctprvn_accto_popltn_info");
             boolean checked = checkPopltn();
             if (!checked) {
-//                ctprvn_accto_popltn_info flag가 없으면 false 따라서 ctprvn_accto_popltn_info가 없는 테이블 명이 된다.
+//                ctprvn_accto_popltn_info flag가 없으면 false가 반환되어 수집이 필요하다고 판단.
                 result = "ctprvn_accto_popltn_info";
             }
         }
@@ -177,7 +177,7 @@ public class JobUtils {
         String flagDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
         MonthlyCollectionFlag flag = monthlyCollectionFlagService.findByDateAndTableName(flagDate, "ctprvn_accto_popltn_info");
 //        ctprvn_accto_popltn_info flag가 없으면 false
-//        flag가
+//        flag가 있으면 true
         return flag != null;
     }
 

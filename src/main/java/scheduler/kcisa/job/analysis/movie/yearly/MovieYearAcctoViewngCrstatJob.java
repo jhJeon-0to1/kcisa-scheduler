@@ -35,7 +35,7 @@ public class MovieYearAcctoViewngCrstatJob extends QuartzJobBean {
     protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
         LocalDate stdDate = LocalDate.now().minusYears(1);
         String stdDateStr = stdDate.format(DateTimeFormatter.ofPattern("yyyy"));
-        String flagDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
+        String flagDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy"));
 
         JobUtils.executeAnalysisJob(context, tableName, checkList, flagDate, ScheduleInterval.YEARLY, jobData -> {
             Connection connection = jobData.conn;

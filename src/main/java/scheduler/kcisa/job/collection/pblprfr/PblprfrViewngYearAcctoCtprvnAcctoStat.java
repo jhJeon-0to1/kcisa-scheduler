@@ -7,6 +7,7 @@ import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.web.reactive.function.client.WebClient;
 import scheduler.kcisa.model.SchedulerStatus;
 import scheduler.kcisa.model.collection.SchedulerLog;
+import scheduler.kcisa.model.flag.collection.YearlyCollectionFlag;
 import scheduler.kcisa.service.flag.collection.YearlyCollectionFlagService;
 import scheduler.kcisa.utils.CustomException;
 import scheduler.kcisa.utils.JobUtils;
@@ -16,6 +17,7 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -99,6 +101,8 @@ public class PblprfrViewngYearAcctoCtprvnAcctoStat extends QuartzJobBean {
                     throw new Exception("updt_count is null");
                 }
                 jobData.logService.create(new SchedulerLog(groupName, jobName, tableName, SchedulerStatus.SUCCESS, count, count - updt_count.get(), updt_count.get()));
+
+                flagService.create(new YearlyCollectionFlag(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy")), tableName, true));
             }
         });
 
