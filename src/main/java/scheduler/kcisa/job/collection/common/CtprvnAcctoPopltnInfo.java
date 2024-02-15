@@ -64,6 +64,7 @@ public class CtprvnAcctoPopltnInfo extends QuartzJobBean {
             case "세종특별자치시":
                 return "36";
             case "전라북도":
+            case "전북특별자치도":
                 return "45";
             case "전라남도":
                 return "46";
@@ -102,7 +103,7 @@ public class CtprvnAcctoPopltnInfo extends QuartzJobBean {
             System.out.println("existTable: " + existTable + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM")));
             if (existTable == null) {
                 // 수집이 필요한 경우가 existTable이 null이 아닌 경우이므로 null이 아니라면 수집을 실시 null이면 수집이 완료된 것이므로 수집을 실시하지 않음.
-                System.out.println(existTable + " 테이블은 이미 수집 완료 되었습니다.");
+                System.out.println(tableName + " 테이블은 이미 수집 완료 되었습니다.");
                 return;
             }
 
