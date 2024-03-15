@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class PetBtyFcltyLicenseInfoCollect extends QuartzJobBean {
     MonthlyCollectionFlagService flagService;
     String tableName = "colct_pet_bty_fclty_license_info";
-    String url = "https://www.localdata.go.kr/datafile/each/02_03_11_P_CSV.zip";
+    String url = "http://www.localdata.go.kr/datafile/each/02_03_11_P_CSV.zip";
 
     public PetBtyFcltyLicenseInfoCollect(MonthlyCollectionFlagService flagService) {
         this.flagService = flagService;
@@ -39,7 +39,8 @@ public class PetBtyFcltyLicenseInfoCollect extends QuartzJobBean {
         AtomicInteger count = new AtomicInteger();
 
         JobUtils.executeJob(jobExecutionContext, tableName, jobData -> {
-            JsonNode response = PetCollection.getPetData(url, "src/main/resources/data/pet/", stdDateStr + "_PetBtyFcltyLicenseInfo.zip", stdDateStr + "_PetBtyFcltyLicenseInfo.csv");
+            JsonNode response = PetCollection.getPetData(url, "src/main/resources/data/pet/",
+                    stdDateStr + "_PetBtyFcltyLicenseInfo.zip", stdDateStr + "_PetBtyFcltyLicenseInfo.csv");
 
             String sql = Utils.getSQLString("src/main/resources/sql/collection/pet/PetBtyFcltyLicenseInfo.sql");
             try (PreparedStatement pstmt = jobData.conn.prepareStatement(sql);) {
@@ -68,15 +69,15 @@ public class PetBtyFcltyLicenseInfoCollect extends QuartzJobBean {
                 if (!updt_cnt.isPresent()) {
                     throw new Exception("updt_cnt is empty");
                 }
-                jobData.logService.create(new SchedulerLog(jobData.groupName, jobData.jobName, tableName, SchedulerStatus.SUCCESS, count.get(),
+                jobData.logService.create(new SchedulerLog(jobData.groupName, jobData.jobName, tableName,
+                        SchedulerStatus.SUCCESS, count.get(),
                         count.get() - updt_cnt.get(), updt_cnt.get()));
 
                 System.out.println(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + " 동물 미용업 수집 완료");
 
-                flagService.create(new MonthlyCollectionFlag(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM")), tableName, true));
+                flagService.create(new MonthlyCollectionFlag(
+                        LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM")), tableName, true));
             }
         });
     }
 }
-
-

@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Component
 public class PetConsgnManageFcltyLicenseInfoCollect extends QuartzJobBean {
     String tableName = "colct_pet_consgn_manage_fclty_license_info";
-    String url = "https://www.localdata.go.kr/datafile/each/02_03_10_P_CSV.zip";
+    String url = "http://www.localdata.go.kr/datafile/each/02_03_10_P_CSV.zip";
     MonthlyCollectionFlagService flagService;
 
     public PetConsgnManageFcltyLicenseInfoCollect(MonthlyCollectionFlagService flagService) {
